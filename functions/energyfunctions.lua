@@ -1,17 +1,16 @@
 energy_values = {
   mult = .4, mult1 = .4, mult2 = .4, chips = .3, chips1 = .3, chips2 = .3, chips3 = .3, Xmult = .2, Xmult1 = .2, Xmult2 = .2, Xchips = .2, money = .3, money2 = .3, money_mod = .1, mult_mod = .2, mult_mod2 = .2, s_mult = .4, chip_mod = .2, 
-  Xmult_mod = .2, Xmult_multi = .05, Xmult_multi2 = .05, Xchips_multi = 0.5
+  Xmult_mod = .2, Xmult_multi = .05, Xmult_multi2 = .05, Xchips_multi = .05
 }
 
 energy_max = 3
-
 
 highlighted_energy_can_use = function(self, card)
   if not G.jokers.highlighted or #G.jokers.highlighted ~= 1 then return false end
   local choice = G.jokers.highlighted[1]
   if energy_matches(choice, self.etype, true) then
     if type(choice.ability.extra) == "table" then
-      if (pokermon_config.unlimited_energy or ((choice.ability.extra.energy_count or 0) + (choice.ability.extra.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+      if can_increase_energy(choice) then
         for name, _ in pairs(energy_values) do
           if type(choice.ability.extra[name]) == "number" then
             return true
@@ -19,12 +18,12 @@ highlighted_energy_can_use = function(self, card)
         end
       end
     elseif type(choice.ability.extra) == "number" then
-      if (pokermon_config.unlimited_energy) or (((choice.ability.energy_count or 0) + (choice.ability.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+      if can_increase_energy(choice) then
         return true
       end
     elseif (choice.ability.mult and choice.ability.mult > 0) or (choice.ability.t_mult and choice.ability.t_mult > 0) or (choice.ability.t_chips and choice.ability.t_chips > 0)
           or (choice.ability.x_mult and choice.ability.x_mult > 1) then
-      if (pokermon_config.unlimited_energy) or (((choice.ability.energy_count or 0) + (choice.ability.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+      if can_increase_energy(choice) then
         return true
       end
     end
@@ -41,10 +40,11 @@ highlighted_energy_use = function(self, card, area, copier)
   else
     G.GAME.energies_used = 1
   end
+  play_sound('poke_energy_use', 1, 0.5)
   set_spoon_item(card)
   if (energy_matches(choice, self.etype, true) or self.etype == "Trans") then
     if type(choice.ability.extra) == "table" then
-      if (pokermon_config.unlimited_energy) or (((choice.ability.extra.energy_count or 0) + (choice.ability.extra.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+      if can_increase_energy(choice) then
         for name, _ in pairs(energy_values) do
           if type(choice.ability.extra[name]) == "number" then
             viable = true
@@ -53,7 +53,7 @@ highlighted_energy_use = function(self, card, area, copier)
       end
     elseif (type(choice.ability.extra) == "number" or (choice.ability.mult and choice.ability.mult > 0) or (choice.ability.t_mult and choice.ability.t_mult > 0) or
       (choice.ability.t_chips and choice.ability.t_chips > 0) or (choice.ability.x_mult and choice.ability.x_mult > 1)) then
-      if (pokermon_config.unlimited_energy) or (((choice.ability.energy_count or 0) + (choice.ability.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+      if can_increase_energy(choice) then
         viable = true
       end
     end
@@ -217,7 +217,7 @@ energize = function(card, etype, evolving, silent)
     local chipss = {"Sly Joker", "Wily Joker", "Clever Joker", "Devious Joker", "Crafty Joker", "Stuntman"}
     local chip_mods = {"Banner", "Scary Face", "Odd Todd", "Runner", "Blue Joker", "Hiker", "Square Joker", "Stone Joker", "Bull", "Castle", "Arrowhead", "Wee Joker"}
     local Xmults = {"Loyalty Card", "Blackboard", "Cavendish", "Card Sharp", "Ramen", "Acrobat", "Flower Pot", "Seeing Double", "Driver's License"}
-    local Xmult_mods = {"Joker Stencil", "Steel Joker", "Constellation", "Madness", "Vampire", "Hologram", "Baron", "Obelisk", "Photograph", "Lucky Cat", "Baseball Card", "Everstone", "Ancient Joker",
+    local Xmult_mods = {"Steel Joker", "Constellation", "Madness", "Vampire", "Hologram", "Baron", "Obelisk", "Photograph", "Lucky Cat", "Baseball Card", "Everstone", "Ancient Joker",
                         "Campfire", "Throwback", "Bloodstone", "Glass Joker", "The Idol", "Hit the Road", "Canio", "Triboulet", "Yorick"}
     local monies = {"Delayed Gratification", "Egg", "Cloud 9", "Rocket", "Gift Card", "Reserved Parking", "Mail-In Rebate", "To the Moon", "Golden Joker", "Trading Card", "Golden Ticket", "Rough Gem",
                     "Satellite", "Matador"}
@@ -247,17 +247,17 @@ energize = function(card, etype, evolving, silent)
       if not card.ability.colorless_sticker and etype == "Colorless" then
         increase = increase/2
       end
-      if (card.ability.mult and card.ability.mult > 0) then
+      if (card.ability.mult and card.ability.mult > 0 and card.config.center.config and card.config.center.config.mult) then
         card.ability.mult = card.ability.mult + (card.config.center.config.mult * increase)
       end
-      if (card.ability.t_mult and card.ability.t_mult > 0) then
+      if (card.ability.t_mult and card.ability.t_mult > 0 and card.config.center.config and card.config.center.config.t_mult) then
         card.ability.t_mult = card.ability.t_mult + (card.config.center.config.t_mult * increase)
       end
-      if (card.ability.t_chips and card.ability.t_chips > 0) then
+      if (card.ability.t_chips and card.ability.t_chips > 0 and card.config.center.config and card.config.center.config.t_chips) then
         card.ability.t_chips = card.ability.t_chips + (card.config.center.config.t_chips * increase)
       end
-      if (card.ability.x_mult and card.ability.x_mult > 1) then
-        card.ability.x_mult = card.ability.x_mult + (card.config.center.config.Xmult * increase)
+      if (card.ability.x_mult and card.ability.x_mult > 1 and card.config.center.config and card.config.center.config.x_mult) then
+        card.ability.x_mult = card.ability.x_mult + (card.config.center.config.x_mult * increase)
       end
     end
   end
@@ -280,7 +280,7 @@ get_total_energy = function(card)
 end
 
 can_increase_energy = function(card)
-  if pokermon_config.unlimited_energy then return true end
+  if pokermon_config.unlimited_energy or card.config.center.no_energy_limit then return true end
   return get_total_energy(card) < energy_max + (G.GAME.energy_plus or 0)
 end
 
@@ -329,6 +329,7 @@ energy_use = function(self, card, area, copier)
   else
     G.GAME.energies_used = 1
   end
+  play_sound('poke_energy_use', 1, 0.5)
   set_spoon_item(card)
   for k, v in pairs(G.jokers.cards) do
     if applied ~= true and (energy_matches(v, self.etype, true) or self.etype == "Trans") then
@@ -364,7 +365,7 @@ energy_can_use = function(self, card)
   for k, v in pairs(G.jokers.cards) do
     if energy_matches(v, self.etype, true) then
       if type(v.ability.extra) == "table" then
-        if (pokermon_config.unlimited_energy or ((v.ability.extra.energy_count or 0) + (v.ability.extra.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+        if can_increase_energy(v) then
           for name, _ in pairs(energy_values) do
             local data = v.ability.extra[name]
             if type(data) == "number" then
@@ -373,12 +374,12 @@ energy_can_use = function(self, card)
           end
         end
       elseif type(v.ability.extra) == "number" then
-        if (pokermon_config.unlimited_energy) or (((v.ability.energy_count or 0) + (v.ability.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+        if can_increase_energy(v) then
           return true
         end
       elseif (v.ability.mult and v.ability.mult > 0) or (v.ability.t_mult and v.ability.t_mult > 0) or (v.ability.t_chips and v.ability.t_chips > 0)
             or (v.ability.x_mult and v.ability.x_mult > 1) then
-        if (pokermon_config.unlimited_energy) or (((v.ability.energy_count or 0) + (v.ability.c_energy_count or 0)) < energy_max + (G.GAME.energy_plus or 0)) then
+        if can_increase_energy(v) then
           return true
         end
       end

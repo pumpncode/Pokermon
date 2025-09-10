@@ -9,15 +9,18 @@ local elgyem={
   config = {extra = {top_planets = 5,  current_planet_count = 0}, evo_rqmt = 5},
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
-    info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
-    info_queue[#info_queue+1] = {set = 'Other', key = 'designed_by', vars = {"bayleef0909"}}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
+    end
     return {vars = {card.ability.extra.top_planets, card.ability.extra.current_planet_count, self.config.evo_rqmt}}
   end,
+  designer = "bayleef0909",
   rarity = 3,
   cost = 7,
   stage = "Basic",
   ptype = "Psychic",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -86,15 +89,18 @@ local beheeyem={
   config = {extra = {top_planets = 3, boosters_to_open = 9}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
-    info_queue[#info_queue+1] = {set = 'Other', key = 'designed_by', vars = {"bayleef0909"}}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
+    end
     return {vars = {center.ability.extra.top_planets, center.ability.extra.boosters_to_open}}
   end,
+  designer = "bayleef0909",
   rarity = "poke_safari",
   cost = 10,
   stage = "One",
   ptype = "Psychic",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -180,27 +186,34 @@ local beheeyem={
 local litwick={
   name = "litwick",
   pos = {x = 1, y = 8},
-  config = {extra = {money_minus = 1}, evo_rqmt = 13},
+  config = {extra = {mult = 3, money_minus = 1, sell_goal = 7}, evo_rqmt = 13},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_drain'}
-    return {vars = {center.ability.extra.money_minus, self.config.evo_rqmt, center.sell_cost}}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {set = 'Other', key = 'poke_drain'}
+    end
+    return {vars = {center.ability.extra.money_minus, self.config.evo_rqmt, center.sell_cost, center.ability.extra.mult, center.ability.extra.sell_goal}}
   end,
   rarity = 2,
   cost = 6,
   stage = "Basic",
   ptype = "Fire",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
     if context.cardarea == G.jokers and context.scoring_hand then
       if context.joker_main then
+        local Mult = card.ability.extra.mult
+        if card.sell_cost >= card.ability.extra.sell_goal then
+          Mult = 3 * card.ability.extra.mult
+        end
         return {
-          message = localize{type = 'variable', key = 'a_mult', vars = {card.sell_cost}}, 
+          message = localize{type = 'variable', key = 'a_mult', vars = {Mult}}, 
           colour = G.C.MULT,
-          mult_mod = card.sell_cost
+          mult_mod = Mult
         }
       end
     end
@@ -220,8 +233,10 @@ local lampent={
   config = {extra = {money_minus = 1}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_drain'}
-    return {vars = {center.ability.extra.money_minus, 2 * center.sell_cost}}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {set = 'Other', key = 'poke_drain'}
+    end
+    return {vars = {center.ability.extra.money_minus, center.sell_cost}}
   end,
   rarity = 3,
   cost = 8,
@@ -229,6 +244,7 @@ local lampent={
   stage = "One",
   ptype = "Fire",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
@@ -236,9 +252,9 @@ local lampent={
     if context.cardarea == G.jokers and context.scoring_hand then
       if context.joker_main then
         return {
-          message = localize{type = 'variable', key = 'a_mult', vars = {2 * card.sell_cost}},
+          message = localize{type = 'variable', key = 'a_mult', vars = {card.sell_cost}},
           colour = G.C.MULT,
-          mult_mod = 2 * card.sell_cost
+          mult_mod = card.sell_cost
         }
       end
     end
@@ -257,16 +273,17 @@ local lampent={
 local chandelure={
   name = "chandelure",
   pos = {x = 3, y = 8},
-  config = {extra = {money = 1, Xmult_multi = 1.3}},
+  config = {extra = {Xmult_multi = 1.3}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    return {vars = {center.ability.extra.Xmult_multi, center.ability.extra.money, 3 * center.sell_cost}}
+    return {vars = {center.ability.extra.Xmult_multi, center.sell_cost}}
   end,
   rarity = "poke_safari",
   cost = 10,
   stage = "Two",
   ptype = "Fire",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
@@ -274,14 +291,13 @@ local chandelure={
     if context.cardarea == G.jokers and context.scoring_hand then
       if context.joker_main then
         return {
-          message = localize{type = 'variable', key = 'a_mult', vars = {3 * card.sell_cost}}, 
+          message = localize{type = 'variable', key = 'a_mult', vars = {card.sell_cost}}, 
           colour = G.C.MULT,
-          mult_mod = 3 * card.sell_cost
+          mult_mod = card.sell_cost
         }
       end
     end
-    if context.other_joker and context.other_joker.config and context.other_joker.sell_cost == 1 and context.other_joker.ability.set == 'Joker' and not context.post_trigger then
-       ease_poke_dollars(context.other_joker, "chandelure", card.ability.extra.money)
+    if context.other_joker and context.other_joker.config and context.other_joker.sell_cost < 2 and context.other_joker.ability.set == 'Joker' and not context.post_trigger then
         G.E_MANAGER:add_event(Event({
           func = function()
               context.other_joker:juice_up(0.5, 0.5)
@@ -312,48 +328,33 @@ local chandelure={
 local golett={
   name = "golett",
   pos = {x = 2, y = 9},
-  config = {extra = {hazard_ratio = 10, interval = 4, Xmult_multi = 1.4, rounds = 5}},
+  config = {extra = {hazards = 4, Xmult_multi = 1.2, rounds = 5, num = 1, dem = 4}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     -- just to shorten function
     local abbr = center.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards'}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
     
-    local to_add = math.floor(52 / abbr.hazard_ratio)
-    if G.playing_cards then
-      local count = #G.playing_cards
-      for _, v in pairs(G.playing_cards) do
-        if SMODS.has_enhancement(v, "m_poke_hazard") then
-          count = count - 1
-        end
-      end
-      to_add = math.floor(count / abbr.hazard_ratio)
-    end
-    
-    return {vars = {to_add, abbr.hazard_ratio, abbr.Xmult_multi, abbr.rounds}}
+    local num, dem = SMODS.get_probability_vars(center, center.ability.extra.num, center.ability.extra.dem, 'golett')
+    return {vars = {abbr.hazards, abbr.Xmult_multi, abbr.rounds, num, dem}}
   end,
   rarity = 3,
   cost = 7,
   stage = "Basic",
   ptype = "Psychic",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
+  hazard_poke = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      poke_add_hazards(card.ability.extra.hazard_ratio)
+      poke_set_hazards(card.ability.extra.hazards)
     end
-    if context.individual and not context.end_of_round and context.cardarea == G.hand and #G.hand.cards >= card.ability.extra.interval then
-      local score = nil
-      for i = card.ability.extra.interval, #G.hand.cards, card.ability.extra.interval do
-        if G.hand.cards[i] == context.other_card then
-          score = true
-          break
-        end
-      end
-      if score then
+    if context.individual and not context.end_of_round and context.cardarea == G.hand then
+      if SMODS.has_enhancement(context.other_card, "m_poke_hazard") or SMODS.pseudorandom_probability(card, 'golett', card.ability.extra.num, card.ability.extra.dem, 'golett') then
         if context.other_card.debuff then
             return {
                 message = localize('k_debuffed'),
@@ -375,48 +376,33 @@ local golett={
 local golurk={
   name = "golurk",
   pos = {x = 3, y = 9},
-  config = {extra = {hazard_ratio = 10, interval = 3, Xmult_multi = 1.6}},
+  config = {extra = {hazards = 4, interval = 3, Xmult_multi = 1.4, num = 1, dem = 3}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     -- just to shorten function
     local abbr = center.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards'}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
     
-    local to_add = math.floor(52 / abbr.hazard_ratio)
-    if G.playing_cards then
-      local count = #G.playing_cards
-      for _, v in pairs(G.playing_cards) do
-        if SMODS.has_enhancement(v, "m_poke_hazard") then
-          count = count - 1
-        end
-      end
-      to_add = math.floor(count / abbr.hazard_ratio)
-    end
-    
-    return {vars = {to_add, abbr.hazard_ratio, abbr.Xmult_multi}}
+    local num, dem = SMODS.get_probability_vars(center, center.ability.extra.num, center.ability.extra.dem, 'golurk')
+    return {vars = {abbr.hazards, abbr.Xmult_multi, num, dem}}
   end,
   rarity = "poke_safari",
   cost = 7,
   stage = "One",
   ptype = "Psychic",
   atlas = "Pokedex5",
+  gen = 5,
+  hazard_poke = true,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      poke_add_hazards(card.ability.extra.hazard_ratio)
+      poke_set_hazards(card.ability.extra.hazards)
     end
-    if context.individual and not context.end_of_round and context.cardarea == G.hand and #G.hand.cards >= card.ability.extra.interval then
-      local score = nil
-      for i = card.ability.extra.interval, #G.hand.cards, card.ability.extra.interval do
-        if G.hand.cards[i] == context.other_card then
-          score = true
-          break
-        end
-      end
-      if score then
+    if context.individual and not context.end_of_round and context.cardarea == G.hand then
+      if SMODS.has_enhancement(context.other_card, "m_poke_hazard") or SMODS.pseudorandom_probability(card, 'golurk', card.ability.extra.num, card.ability.extra.dem, 'golurk') then
         if context.other_card.debuff then
             return {
                 message = localize('k_debuffed'),

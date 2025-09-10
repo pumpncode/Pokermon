@@ -14,6 +14,7 @@ local pansage = {
   stage = "Basic",
   ptype = "Grass",
   atlas = "Pokedex5",
+  gen = 5,
   item_req = "leafstone",
   blueprint_compat = false,
   calculate = function(self, card, context)
@@ -24,25 +25,27 @@ local pansage = {
 local simisage = {
   name = "simisage",
   pos = { x = 4, y = 1 },
-  config = { extra = { odds = 3 } },
+  config = { extra = { num = 1, dem = 3 } },
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
     info_queue[#info_queue + 1] = { set = 'Joker', key = 'j_shortcut', config = {} }
     info_queue[#info_queue + 1] = G.P_CENTERS.m_lucky
-    return { vars = { '' .. (G.GAME and G.GAME.probabilities.normal or 1), card.ability.extra.odds } }
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'simisage')
+    return { vars = { num, dem } }
   end,
   rarity = 'poke_safari',
   cost = 8,
   stage = "One",
   ptype = "Grass",
   atlas = "Pokedex5",
+  gen = 5,
   blueprint_compat = false,
   calculate = function(self, card, context)
     if context.before and context.cardarea == G.jokers and not context.blueprint then
       local stall_for_effects = false
       for _, v in ipairs(context.full_hand) do
         if v.config.center == G.P_CENTERS.c_base then
-          if pseudorandom('simisage') < G.GAME.probabilities.normal / card.ability.extra.odds then
+          if SMODS.pseudorandom_probability(card, 'simisage', card.ability.extra.num, card.ability.extra.dem, 'simisage') then
             stall_for_effects = true
             v:set_ability(G.P_CENTERS.m_lucky, nil, true)
             G.E_MANAGER:add_event(Event({
@@ -79,6 +82,7 @@ local pansear = {
   stage = "Basic",
   ptype = "Fire",
   atlas = "Pokedex5",
+  gen = 5,
   item_req = "firestone",
   blueprint_compat = false,
   calculate = function(self, card, context)
@@ -102,6 +106,7 @@ local simisear = {
   stage = "One",
   ptype = "Fire",
   atlas = "Pokedex5",
+  gen = 5,
   blueprint_compat = false,
   calculate = function(self, card, context)
     if context.first_hand_drawn then
@@ -158,6 +163,7 @@ local panpour = {
   stage = "Basic",
   ptype = "Water",
   atlas = "Pokedex5",
+  gen = 5,
   item_req = "waterstone",
   blueprint_compat = false,
   calculate = function(self, card, context)
@@ -180,6 +186,7 @@ local simipour = {
   stage = "One",
   ptype = "Water",
   atlas = "Pokedex5",
+  gen = 5,
   blueprint_compat = false,
   calculate = function(self, card, context)
     if context.before and context.cardarea == G.jokers and not context.blueprint then
@@ -216,37 +223,29 @@ local simipour = {
 local roggenrola = {
   name = "roggenrola", 
   pos = {x = 2, y = 2},
-  config = {extra = {hazard_ratio = 10, mult_mod = 4, hazard_triggered = 0}, evo_rqmt = 25},
+  config = {extra = {hazards = 4, mult_mod = 4, hazard_triggered = 0}, evo_rqmt = 25},
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
     -- just to shorten function
     local abbr = card.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards'}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
 
-    local to_add = math.floor(52 / abbr.hazard_ratio)
-    if G.playing_cards then
-      local count = #G.playing_cards
-      for _, v in pairs(G.playing_cards) do
-        if SMODS.has_enhancement(v, "m_poke_hazard") then
-          count = count - 1
-        end
-      end
-      to_add = math.floor(count / abbr.hazard_ratio)
-    end
-    return {vars = {to_add, abbr.hazard_ratio, abbr.mult_mod, math.max(0, self.config.evo_rqmt - abbr.hazard_triggered)}}
+    return {vars = {abbr.hazards, abbr.mult_mod, math.max(0, self.config.evo_rqmt - abbr.hazard_triggered)}}
   end,
   rarity = 1,
   cost = 4,
   stage = "Basic",
   ptype = "Earth",
   atlas = "Pokedex5",
+  gen = 5,
+  hazard_poke = true,
   blueprint_compat = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      poke_add_hazards(card.ability.extra.hazard_ratio)
+      poke_set_hazards(card.ability.extra.hazards)
     end
-    if context.individual and not context.end_of_round and context.cardarea == G.hand and SMODS.has_enhancement(context.other_card, "m_poke_hazard") then
+    if context.individual and not context.end_of_round and context.cardarea == G.hand and SMODS.has_no_rank(context.other_card) then
       if context.other_card.debuff then
           return {
               message = localize('k_debuffed'),
@@ -270,39 +269,33 @@ local roggenrola = {
 local boldore = {
   name = "boldore", 
   pos = {x = 3, y = 2},
-  config = {extra = {hazard_ratio = 10, mult_mod = 8}},
+  config = {extra = {hazards = 4, mult_mod = 8}},
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
     -- just to shorten function
     local abbr = card.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards'}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
-    info_queue[#info_queue+1] = G.P_CENTERS.c_poke_linkcable
-
-    local to_add = math.floor(52 / abbr.hazard_ratio)
-    if G.playing_cards then
-      local count = #G.playing_cards
-      for _, v in pairs(G.playing_cards) do
-        if SMODS.has_enhancement(v, "m_poke_hazard") then
-          count = count - 1
-        end
-      end
-      to_add = math.floor(count / abbr.hazard_ratio)
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.c_poke_linkcable
     end
-    return {vars = {to_add, abbr.hazard_ratio, abbr.mult_mod}}
+    
+    return {vars = {abbr.hazards, abbr.mult_mod}}
   end,
   rarity = 2,
   cost = 6,
   stage = "One",
   ptype = "Earth",
   atlas = "Pokedex5",
+  gen = 5,
   item_req = "linkcable",
+  hazard_poke = true,
   blueprint_compat = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      poke_add_hazards(card.ability.extra.hazard_ratio)
+      poke_set_hazards(card.ability.extra.hazards)
     end
-    if context.individual and not context.end_of_round and context.cardarea == G.hand and SMODS.has_enhancement(context.other_card, "m_poke_hazard") then
+    if context.individual and not context.end_of_round and context.cardarea == G.hand and SMODS.has_no_rank(context.other_card) then
       if context.other_card.debuff then
           return {
               message = localize('k_debuffed'),
@@ -323,37 +316,29 @@ local boldore = {
 local gigalith = {
   name = "gigalith", 
   pos = {x = 4, y = 2},
-  config = {extra = {hazard_ratio = 10, mult_mod = 6, retriggers = 1}},
+  config = {extra = {hazards = 4, mult_mod = 6, retriggers = 1}},
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
     -- just to shorten function
     local abbr = card.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards'}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
 
-    local to_add = math.floor(52 / abbr.hazard_ratio)
-    if G.playing_cards then
-      local count = #G.playing_cards
-      for _, v in pairs(G.playing_cards) do
-        if SMODS.has_enhancement(v, "m_poke_hazard") then
-          count = count - 1
-        end
-      end
-      to_add = math.floor(count / abbr.hazard_ratio)
-    end
-    return {vars = {to_add, abbr.hazard_ratio, abbr.mult_mod}}
+    return {vars = {abbr.hazards, abbr.mult_mod}}
   end,
   rarity = 'poke_safari',
   cost = 10,
   stage = "Two",
   ptype = "Earth",
   atlas = "Pokedex5",
+  gen = 5,
   blueprint_compat = true,
+  hazard_poke = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      poke_add_hazards(card.ability.extra.hazard_ratio)
+      poke_set_hazards(card.ability.extra.hazards)
     end
-    if context.individual and not context.end_of_round and context.cardarea == G.hand and SMODS.has_enhancement(context.other_card, "m_poke_hazard") then
+    if context.individual and not context.end_of_round and context.cardarea == G.hand and SMODS.has_no_rank(context.other_card) then
       if context.other_card.debuff then
           return {
               message = localize('k_debuffed'),
@@ -367,7 +352,7 @@ local gigalith = {
           }
       end
     end
-    if context.repetition and context.cardarea == G.hand and (next(context.card_effects[1]) or #context.card_effects > 1) and SMODS.has_enhancement(context.other_card, "m_poke_hazard") then
+    if context.repetition and context.cardarea == G.hand and (next(context.card_effects[1]) or #context.card_effects > 1) and SMODS.has_no_rank(context.other_card) then
       return {
         message = localize('k_again_ex'),
         repetitions = card.ability.extra.retriggers,

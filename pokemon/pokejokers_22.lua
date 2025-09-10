@@ -14,6 +14,8 @@ local deino={
   stage = "Basic",
   ptype = "Dark",
   atlas = "Pokedex5",
+  gen = 5,
+  pseudol = true,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -47,6 +49,7 @@ local zweilous={
   stage = "One",
   ptype = "Dark",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -80,6 +83,7 @@ local hydreigon={
   stage = "Two",
   ptype = "Dark",
   atlas = "Pokedex5",
+  gen = 5,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -108,8 +112,10 @@ local hydreigon={
         }
     end]]--
     if context.remove_playing_cards and not context.blueprint then
-      card.ability.extra.Xmult = card.ability.extra.Xmult + card.ability.extra.Xmult_mod
-      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize("k_upgrade_ex")})
+      for _, removed_card in ipairs(context.removed) do
+        card.ability.extra.Xmult = card.ability.extra.Xmult + card.ability.extra.Xmult_mod
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize("k_upgrade_ex")})
+      end
     end
   end
 }

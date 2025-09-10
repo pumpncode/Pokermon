@@ -26,18 +26,108 @@
 -- Archen 566
 -- Archeops 567
 -- Trubbish 568
+local trubbish={
+  name = "trubbish",
+  pos = {x = 4, y = 5},
+  config = {extra = {chips = 0,chip_mod = 3,money = 2,triggers = 0}, evo_rqmt = 4},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    return {vars = {center.ability.extra.chips, center.ability.extra.chip_mod,center.ability.extra.money, math.max(0, self.config.evo_rqmt - center.ability.extra.triggers)}}
+  end,
+  designer = "bt",
+  rarity = 1,
+  cost = 5,
+  gen = 5,
+  stage = "Basic",
+  ptype = "Dark",
+  atlas = "Pokedex5",
+  perishable_compat = true,
+  blueprint_compat = true,
+  eternal_compat = true,
+  calculate = function(self, card, context)
+    if context.cardarea == G.jokers and context.scoring_hand then
+      if context.joker_main and card.ability.extra.chips > 0 then
+        return {
+          message = localize{type = 'variable', key = 'a_chips', vars = {card.ability.extra.chips}}, 
+          colour = G.C.CHIPS,
+          chip_mod = card.ability.extra.chips
+        }
+      end
+    end
+  end,
+  calc_dollar_bonus = function(self, card)
+    if G.GAME.current_round.discards_used == 0 and G.GAME.current_round.discards_left > 0 then
+      card.ability.extra.chips = card.ability.extra.chips + (card.ability.extra.chip_mod * G.GAME.current_round.discards_left)
+      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize("k_upgrade_ex"), colour = G.C.CHIPS})
+      card.ability.extra.triggers = card.ability.extra.triggers + 1
+      if card.ability.extra.triggers >= self.config.evo_rqmt and not next(find_joker("everstone")) then
+        poke_evolve(card, "j_poke_garbodor")
+      end
+      local earned = ease_poke_dollars(card, "trubbish", G.GAME.current_round.discards_left * card.ability.extra.money, true)
+      return earned
+    end
+  end,
+}
 -- Garbodor 569
+local garbodor={
+  name = "garbodor",
+  pos = {x = 5, y = 5},
+  config = {extra = {chips = 0,chip_mod = 5,triggers = 0}},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {key = 'tag_garbage', set = 'Tag', specific_vars = {1, G.GAME.unused_discards or 0}}
+    end
+    return {vars = {center.ability.extra.chips, center.ability.extra.chip_mod,center.ability.extra.money}}
+  end,
+  designer = "bt",
+  rarity = "poke_safari",
+  cost = 8,
+  gen = 5,
+  stage = "One",
+  ptype = "Dark",
+  atlas = "Pokedex5",
+  perishable_compat = true,
+  blueprint_compat = true,
+  eternal_compat = true,
+  calculate = function(self, card, context)
+    if context.cardarea == G.jokers and context.scoring_hand then
+      if context.joker_main and card.ability.extra.chips > 0 then
+        return {
+          message = localize{type = 'variable', key = 'a_chips', vars = {card.ability.extra.chips}}, 
+          colour = G.C.CHIPS,
+          chip_mod = card.ability.extra.chips
+        }
+      end
+    end
+    if context.end_of_round and not context.individual and not context.repetition and G.GAME.current_round.discards_used == 0 and G.GAME.current_round.discards_left > 0 then
+      card.ability.extra.chips = card.ability.extra.chips + (card.ability.extra.chip_mod * G.GAME.current_round.discards_left)
+      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize("k_upgrade_ex"), colour = G.C.CHIPS})
+      if ((G.GAME.poke_ante_discards_used or 0) == 0) and G.GAME.blind.boss then
+        G.E_MANAGER:add_event(Event({
+          func = (function()
+              add_tag(Tag('tag_garbage'))
+              play_sound('generic1', 0.9 + math.random()*0.1, 0.8)
+              play_sound('holo1', 1.2 + math.random()*0.1, 0.4)
+              return true
+          end)
+        }))
+      end
+    end
+  end,
+}
 -- Zorua 570
 local zorua = {
   name = "zorua", 
   pos = { x = 6, y = 5 },
-  soul_pos = { x = 8, y = 12 },
+  soul_pos = { x = 99, y = 99 },
   config = {extra = {hidden_key = nil, rounds = 5, active = true}},
   rarity = 3,
   cost = 8,
   stage = "Basic",
   ptype = "Dark",
   atlas = "Pokedex5",
+  gen = 5,
   blueprint_compat = true,
   rental_compat = false,
   calculate = function(self, card, context)
@@ -89,7 +179,7 @@ local zorua = {
     end
   end,
   set_ability = function(self, card, initial, delay_sprites)
-    if not type_sticker_applied(card) then
+    if not type_sticker_applied(card) and not poke_is_in_collection(card) and not G.SETTINGS.paused then
       apply_type_sticker(card, "Dark")
     end
     if card.area ~= G.jokers and not poke_is_in_collection(card) and not G.SETTINGS.paused then
@@ -150,7 +240,7 @@ local zorua = {
     if G.STAGE == G.STAGES.RUN and card.area == G.jokers  then
       local other_joker = G.jokers.cards[#G.jokers.cards]
       card.ability.blueprint_compat = ( other_joker and other_joker ~= card and not other_joker.debuff and other_joker.config.center.blueprint_compat and 'compatible') or 'incompatible'
-      if card.ability.blueprint_compat == 'compatible' and not card.debuff and card.ability.extra.active then
+      if card.ability.blueprint_compat == 'compatible' and not card.debuff and card.ability.extra.active and other_joker.children.center.atlas.px == 71 then
         card.children.center.atlas = other_joker.children.center.atlas
         card.children.center:set_sprite_pos(other_joker.children.center.sprite_pos)
         if other_joker.children.floating_sprite then
@@ -161,9 +251,9 @@ local zorua = {
           card.children.floating_sprite:set_sprite_pos(self.soul_pos)
         end
       else
-        card.children.center.atlas = G.ASSET_ATLAS[card.edition and card.edition.poke_shiny and "poke_Shinydex5" or "poke_Pokedex5"]
+        card.children.center.atlas = G.ASSET_ATLAS[card.edition and card.edition.poke_shiny and "poke_AtlasJokersBasicNatdexShiny" or "poke_AtlasJokersBasicNatdex"]
         card.children.center:set_sprite_pos(self.pos)
-        card.children.floating_sprite.atlas = G.ASSET_ATLAS[card.edition and card.edition.poke_shiny and "poke_Shinydex5" or "poke_Pokedex5"]
+        card.children.floating_sprite.atlas = G.ASSET_ATLAS[card.edition and card.edition.poke_shiny and "poke_AtlasJokersBasicNatdexShiny" or "poke_AtlasJokersBasicNatdex"]
         card.children.floating_sprite:set_sprite_pos(self.soul_pos)
       end
     elseif poke_is_in_collection(card) and card.children.center.sprite_pos ~= self.pos and card.children.center.atlas.name ~= self.atlas then
@@ -172,5 +262,5 @@ local zorua = {
   end,
 }
 return {name = "Pokemon Jokers 541-570", 
-        list = {zorua},
+        list = {trubbish, garbodor, zorua},
 }

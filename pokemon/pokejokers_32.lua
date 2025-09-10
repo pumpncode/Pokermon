@@ -31,7 +31,9 @@ local tinkatink={
   config = {extra = {mult = 5,rounds = 5, cards_debuffed = 12}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+    end
     return {vars = {center.ability.extra.mult, center.ability.extra.rounds, center.ability.extra.cards_debuffed}}
   end,
   rarity = 3,
@@ -39,12 +41,13 @@ local tinkatink={
   stage = "Basic",
   ptype = "Fairy",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      local add = function(v) return v.ability.name ~= 'Steel Card' end
+      local add = function(v) return not SMODS.has_enhancement(v, 'm_steel') end
       local modify = function(v) SMODS.debuff_card(v, true, card); end
       local args = {array = G.playing_cards, amt = card.ability.extra.cards_debuffed, seed = 'tinkatink', add_con = add, mod_func = modify}
       pseudorandom_multi(args)
@@ -77,7 +80,9 @@ local tinkatuff={
   config = {extra = {mult = 10,rounds = 5, cards_debuffed = 16}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+    end
     return {vars = {center.ability.extra.mult, center.ability.extra.rounds, center.ability.extra.cards_debuffed}}
   end,
   rarity = "poke_safari",
@@ -85,12 +90,13 @@ local tinkatuff={
   stage = "One",
   ptype = "Fairy",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      local add = function(v) return v.ability.name ~= 'Steel Card' end
+      local add = function(v) return not SMODS.has_enhancement(v, 'm_steel') end
       local modify = function(v) SMODS.debuff_card(v, true, card) end
       local args = {array = G.playing_cards, amt = card.ability.extra.cards_debuffed, seed = 'tinkatuff', add_con = add, mod_func = modify}
       pseudorandom_multi(args)
@@ -123,8 +129,10 @@ local tinkaton={
   config = {extra = {mult = 15,rounds = 5, cards_debuffed = 20}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = G.P_CENTERS.m_steel
-    info_queue[#info_queue+1] = G.P_CENTERS.m_glass
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.m_steel
+      info_queue[#info_queue+1] = G.P_CENTERS.m_glass
+    end
     return {vars = {center.ability.extra.mult, center.ability.extra.rounds, center.ability.extra.cards_debuffed}}
   end,
   rarity = "poke_safari",
@@ -132,48 +140,26 @@ local tinkaton={
   stage = "Two",
   ptype = "Fairy",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
     if context.setting_blind then
-      local add = function(v) return v.ability.name ~= 'Steel Card' end
+      local add = function(v) return not SMODS.has_enhancement(v, 'm_steel') end
       local modify = function(v) SMODS.debuff_card(v, true, card) end
       local args = {array = G.playing_cards, amt = card.ability.extra.cards_debuffed, seed = 'tinkaton', add_con = add, mod_func = modify}
       pseudorandom_multi(args)
     end
     if context.individual and not context.end_of_round and context.cardarea == G.play and not context.other_card.debuff then
-      if context.other_card.ability.name == 'Steel Card' then
-        return {
-          x_mult = 2,
-          mult = card.ability.extra.mult,
-          card = card
-        }
-      else
-        return {
-          mult = card.ability.extra.mult,
-          card = card
-        }
-      end
+      return {
+        mult = card.ability.extra.mult,
+        card = card
+      }
     end
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.after then
-        for i = 1, #context.scoring_hand do
-          if context.scoring_hand[i].ability.name == 'Steel Card' and not context.scoring_hand[i].debuff and pseudorandom('tinkaton') < G.GAME.probabilities.normal/4 then
-            context.scoring_hand[i].shattered = true
-            local destroyed = context.scoring_hand[i]
-            G.E_MANAGER:add_event(Event({
-              trigger = 'after',
-              delay = 0.2,
-              func = function() 
-                context.scoring_hand[i]:shatter()
-              return true end }))
-            delay(0.3)
-            for i = 1, #G.jokers.cards do
-              G.jokers.cards[i]:calculate_joker({remove_playing_cards = true, removed = {destroyed}})
-            end
-          end
-        end
+    if context.check_enhancement then
+      if context.other_card.config.center.key == "m_steel" then
+          return {m_glass = true}
       end
     end
     if context.end_of_round and not context.individual and not context.repetition then
@@ -204,6 +190,7 @@ local wiglett={
   stage = "Basic", 
   ptype = "Water",
   atlas = "Pokedex9",
+  gen = 9,
   blueprint_compat = true,
   calculate = function(self, card, context)
     if context.cardarea == G.jokers and context.scoring_hand then

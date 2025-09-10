@@ -23,6 +23,7 @@ local grubbin={
   stage = "Basic", 
   ptype = "Grass",
   atlas = "Pokedex7",
+  gen = 7,
   blueprint_compat = true,
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
@@ -56,10 +57,13 @@ local charjabug={
   stage = "One", 
   ptype = "Lightning",
   atlas = "Pokedex7",
+  gen = 7,
   blueprint_compat = true,
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = G.P_CENTERS.c_poke_thunderstone
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.c_poke_thunderstone
+    end
 		return {vars = {center.ability.extra.mult, center.ability.extra.mult * #find_pokemon_type("Lightning")}}
   end,
   calculate = function(self, card, context)
@@ -88,6 +92,7 @@ local vikavolt={
   stage = "Two", 
   ptype = "Lightning",
   atlas = "Pokedex7",
+  gen = 7,
   blueprint_compat = true,
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)

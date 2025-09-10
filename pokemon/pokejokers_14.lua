@@ -29,7 +29,7 @@
 local buizel={
   name = "buizel", 
   pos = {x = 3, y = 2}, 
-  config = {extra = {chips = 20, rounds = 4}},
+  config = {extra = {chips = 30, rounds = 4}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
 		return {vars = {center.ability.extra.chips, center.ability.extra.rounds}}
@@ -38,6 +38,7 @@ local buizel={
   cost = 4, 
   stage = "Basic", 
   atlas = "Pokedex4",
+  gen = 4,
   ptype = "Water",
   blueprint_compat = true,
   calculate = function(self, card, context)
@@ -60,7 +61,7 @@ local buizel={
 local floatzel={
   name = "floatzel", 
   pos = {x = 4, y = 2}, 
-  config = {extra = {chips = 40}},
+  config = {extra = {chips = 45}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
 		return {vars = {center.ability.extra.chips}}
@@ -69,6 +70,7 @@ local floatzel={
   cost = 6, 
   stage = "One", 
   atlas = "Pokedex4",
+  gen = 4,
   ptype = "Water",
   blueprint_compat = true,
   calculate = function(self, card, context)

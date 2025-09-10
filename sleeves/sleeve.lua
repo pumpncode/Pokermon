@@ -20,8 +20,8 @@ end
 		key = 'pokemonsleeve',
 		name = 'Trainer Sleeve',
 		prefix_config = {},
-		atlas = "pokesleeves",
-		pos = { x = 0, y = 0 },
+		atlas = "AtlasDecksBasic",
+		pos = { x = 0, y = 1 },
 		config = {vouchers = { "v_poke_goodrod"}, consumables = {'c_poke_pokeball'}},
 		loc_vars = function(self, info_queue, center)
 			return {vars = {localize("goodrod_variable"), localize("pokeball_variable")}}
@@ -32,8 +32,8 @@ end
 		key = 'obituarysleeve',
 		name = 'Obituary Sleeve',
 		prefix_config = {},
-		atlas = "pokesleeves",
-		pos = { x = 2, y = 0 },
+		atlas = "AtlasDecksBasic",
+		pos = { x = 2, y = 1 },
 		config = {},
 		loc_vars = function(self, info_queue, center)
 		  return {vars = {localize("pinkseal_variable")}}
@@ -42,14 +42,30 @@ end
 			G.GAME.modifiers.poke_force_seal = "poke_pink_seal"
 		end
 	}
+  
+  --- Revenant Sleeve
+	local revenantsleeve = {
+		key = 'revenantsleeve',
+		name = 'Revenant Sleeve',
+		prefix_config = {},
+		atlas = "AtlasDecksBasic",
+		pos = { x = 5, y = 1 },
+		config = {},
+		loc_vars = function(self, info_queue, center)
+		  return {vars = {localize("silverseal_variable")}}
+		end,
+		apply = function(self)
+			G.GAME.modifiers.poke_force_seal = "poke_silver"
+		end
+	}
 
 --- Luminous Sleeve 
 	local luminoussleeve = {
 		key = 'luminoussleeve',
 		name = 'Luminous Sleeve',
 		prefix_config = {},
-		atlas = "pokesleeves",
-		pos = { x = 1, y = 0 },
+		atlas = "AtlasDecksBasic",
+		pos = { x = 1, y = 1 },
 		config = {},
 		loc_vars = function(self, info_queue, center)
 			return {
@@ -62,20 +78,37 @@ end
 	end
 }
 
--- Pokemon Sleeve
+-- Telekinetic Sleeve
 	local telekineticsleeve = {
 		key = 'telekineticsleeve',
 		name = 'Telekinetic Sleeve',
 		prefix_config = {},
-		atlas = "pokesleeves",
-		pos = { x = 3, y = 0 },
+		atlas = "AtlasDecksBasic",
+		pos = { x = 3, y = 1 },
 		config = {vouchers = { "v_crystal_ball"}, consumables = {'c_poke_twisted_spoon', 'c_poke_twisted_spoon'}},
 		loc_vars = function(self, info_queue, center)
 			return {vars = {localize{type = 'name_text', key = 'v_crystal_ball', set = 'Voucher'}, localize("twisted_spoon_variable")}}
 		end,
-	}
+}
 
-local slist = {pokemonsleeve, obituarysleeve, luminoussleeve, telekineticsleeve}
+local ampedsleeve = {
+	name = "ampedsleeve",
+	key = "ampedsleeve",
+  prefix_config = {},
+  pos = { x = 4, y = 1 },
+  atlas = "AtlasDecksBasic",
+	config = {vouchers = { "v_poke_energysearch"}, consumables = {'c_poke_double_rainbow_energy'}},
+  loc_vars = function(self, info_queue, center)
+    return {vars = {localize{type = 'name_text', key = 'v_poke_energysearch', set = 'Voucher'}, localize("double_rainbow_energy_variable")}}
+  end,
+} 
+
+local slist = nil
+if pokermon_config.pokemon_legacy then
+  slist = {pokemonsleeve, obituarysleeve, revenantsleeve, luminoussleeve, telekineticsleeve, ampedsleeve}
+else
+  slist = {pokemonsleeve, luminoussleeve, telekineticsleeve, ampedsleeve}
+end
 
 return {Name = "Sleeve",
 				init = init,

@@ -23,7 +23,9 @@ local feebas={
   config = {extra = {mult = 1}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = { set = 'Joker', key = 'j_splash', config={}}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = { set = 'Joker', key = 'j_splash', config={}}
+    end
     return {vars = {center.ability.extra.mult}}
   end,
   rarity = 3, 
@@ -32,6 +34,7 @@ local feebas={
   stage = "Basic", 
   ptype = "Water",
   atlas = "Pokedex3",
+  gen = 3,
   blueprint_compat = true,
   calculate = function(self, card, context)
     if context.cardarea == G.jokers and context.scoring_hand then
@@ -59,6 +62,7 @@ local milotic={
   stage = "One",
   ptype = "Water",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -96,9 +100,11 @@ local wynaut={
   config = {extra = {Xmult_minus = 0.75,rounds = 2,}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = {set = 'Other', key = 'baby'}
-    info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
-    info_queue[#info_queue+1] = G.P_CENTERS.c_fool
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {set = 'Other', key = 'baby'}
+      info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
+      info_queue[#info_queue+1] = G.P_CENTERS.c_fool
+    end
     return {vars = {center.ability.extra.Xmult_minus, center.ability.extra.rounds, }}
   end,
   rarity = 3,
@@ -106,6 +112,7 @@ local wynaut={
   stage = "Baby",
   ptype = "Psychic",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,

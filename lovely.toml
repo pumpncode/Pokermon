@@ -26,8 +26,9 @@ target = "functions/common_events.lua"
 pattern = "if v.yes_pool_flag and not G.GAME.pool_flags[v.yes_pool_flag] then add = nil end"
 position = "after"
 payload = '''
-if v.set == 'Joker' and not v.stage and pokermon_config and (pokermon_config.pokemon_only or pokermon_config.pokemon_master) then add = nil end
-if v.set == 'Joker' and v.stage and not (v.atlas == "poke_Pokedex1" or v.atlas == "poke_others") and pokermon_config and pokermon_config.gen_one then add = nil end
+if v.set == 'Joker' and not v.stage and pokermon_config and pokermon_config.pokemon_only then add = nil end
+if v.set == 'Joker' and v.stage and not get_gen_allowed(v) then add = nil end
+if v.set == 'Joker' and v.stage and pokermon_config and not pokermon_config.hazards_on and v.hazard_poke then add = nil end
 if add and v.set == 'Joker' and v.stage and poke_family_present(v) then add = nil end
 '''
 match_indent = true
@@ -38,7 +39,7 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "if next(find_joker('Splash')) then"
 position = "at"
-payload = "if next(find_joker('Splash')) or next(SMODS.find_card('j_poke_magikarp')) or next(SMODS.find_card('j_poke_feebas')) then"
+payload = "if next(find_joker('Splash')) or applies_splash() then"
 match_indent = true
 
 # Magikarp functionality better calc
@@ -47,7 +48,9 @@ match_indent = true
 target = "functions/state_events.lua"
 pattern = "local splashed = SMODS.always_scores(G.play.cards[i]) or next(find_joker('Splash'))"
 position = "at"
-payload = "local splashed = SMODS.always_scores(G.play.cards[i]) or next(find_joker('Splash')) or next(SMODS.find_card('j_poke_magikarp')) or next(SMODS.find_card('j_poke_feebas'))"
+payload = '''
+local splashed = SMODS.always_scores(G.play.cards[i]) or next(find_joker('Splash')) or applies_splash()
+'''
 match_indent = true
 
 # Mimikyu Localization Functionality
@@ -99,7 +102,7 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "card.lua"
-pattern = "G.GAME.pack_choices = self.ability.choose or self.config.center.config.choose or 1"
+pattern = "booster_obj = self.config.center"
 position = "after"
 payload = '''
 if self.ability.name:find('Celestial') and next(find_joker("xatu")) then
@@ -164,7 +167,10 @@ match_indent = true
 target = "card.lua"
 pattern = "self.sell_cost = math.max(1, math.floor(self.cost/2)) + (self.ability.extra_value or 0)"
 position = "after"
-payload = "if self.sell_cost < 1 then self.sell_cost = 1 end"
+payload = '''
+if self.sell_cost < 1 then self.sell_cost = 1 end
+if self.ability.name == "unown" then self.sell_cost = 0 end
+'''
 match_indent = true
 
 #Deck functionality
@@ -212,19 +218,21 @@ G.SPLASH_LOGO = Sprite(0, 0,
     13*SC_scale*(G.ASSET_ATLAS["balatro"].py/G.ASSET_ATLAS["balatro"].px),
     G.ASSET_ATLAS["balatro"], {x=0,y=0})
 '''
-position = "at"
+position = "after"
 payload = '''
-    local poke_logo = pokermon_config.pokemon_aprilfools and "poke_smeargle_logo" or "poke_logo"
-    G.SPLASH_LOGO = Sprite(0, 0, 
-        13/333*389*SC_scale, 
-        13/333*389*SC_scale*(G.ASSET_ATLAS[poke_logo].py/G.ASSET_ATLAS[poke_logo].px),
-        G.ASSET_ATLAS[poke_logo], {x=0.0,y=0})
+    if pokermon_config.pokemon_title then
+      local poke_logo = pokermon_config.pokemon_aprilfools and "poke_smeargle_logo" or "poke_logo"
+      G.SPLASH_LOGO = Sprite(0, 0, 
+          13/333*389*SC_scale, 
+          13/333*389*SC_scale*(G.ASSET_ATLAS[poke_logo].py/G.ASSET_ATLAS[poke_logo].px),
+          G.ASSET_ATLAS[poke_logo], {x=0.0,y=0})
+    end
 '''
 match_indent = true
 overwrite = true
 
 
-# Replace start menu card with wobbuffet
+# Replace start menu card with unown
 [[patches]]
 [patches.pattern]
 target = "game.lua"
@@ -233,9 +241,14 @@ local replace_card = Card(self.title_top.T.x, self.title_top.T.y, 1.2*G.CARD_W*S
 '''
 position = "at"
 payload = '''
-local replace_card = Card(self.title_top.T.x, self.title_top.T.y, 1.2*G.CARD_W*SC_scale, 1.2*G.CARD_H*SC_scale, G.P_CARDS.empty, G.P_CENTERS.j_poke_unown)
-replace_card.ability.extra.form = "R"
-G.P_CENTERS.j_poke_unown:set_sprites(replace_card)
+local replace_card = nil
+if pokermon_config.pokemon_title then
+  replace_card = Card(self.title_top.T.x, self.title_top.T.y, 1.2*G.CARD_W*SC_scale, 1.2*G.CARD_H*SC_scale, G.P_CARDS.empty, G.P_CENTERS.j_poke_unown)
+  replace_card.ability.extra.form = "R"
+  G.P_CENTERS.j_poke_unown:set_sprites(replace_card)
+else
+  replace_card = Card(self.title_top.T.x, self.title_top.T.y, 1.2*G.CARD_W*SC_scale, 1.2*G.CARD_H*SC_scale, G.P_CARDS.S_A, G.P_CENTERS.c_base)
+end
 '''
 match_indent = true
 
@@ -244,7 +257,11 @@ match_indent = true
 target = "game.lua"
 pattern = "replace_card.states.visible = false"
 position = "after"
-payload = "replace_card.seal = nil"
+payload = '''
+if pokermon_config.pokemon_title then
+  replace_card.seal = nil
+end
+'''
 match_indent = true
 
 # Description functionality, a little hacky but it works
@@ -317,19 +334,6 @@ end
 '''
 match_indent = true
 
-# Mega Gengar functionality
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "local edition = poll_edition('edi'..(key_append or '')..G.GAME.round_resets.ante)"
-position = "after"
-payload = '''
-if edition and ((area == G.shop_jokers) or (area == G.pack_cards)) and next(SMODS.find_card('j_poke_mega_gengar')) and edition == "e_polychrome" then
-  edition = {negative = true}
-end
-'''
-match_indent = true
-
 # Card Effect Divider
 [[patches]]
 [patches.pattern]
@@ -394,6 +398,17 @@ position = "at"
 payload = "if self.ability.perish_tally and self.ability.perish_tally == 1 and not (self.ability and self.ability.extra and type(self.ability.extra) == 'table' and self.ability.extra.rounds and self.ability.extra.rounds <= 1) then"
 match_indent = true
 
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "self.ability.perish_tally = 0"
+position = "after"
+payload = '''
+if self.edition and self.edition.poke_shiny then
+  SMODS.change_booster_limit(-1)
+end
+'''
+match_indent = true
 
 # Jirachi Double Payout and DRE
 [[patches]]
@@ -578,37 +593,6 @@ payload = '''
 '''
 match_indent = true
 
-
-# Togekiss Triple Odds - Mult
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "if pseudorandom('lucky_mult') < G.GAME.probabilities.normal/5 then"
-position = "at"
-payload = "if pseudorandom('lucky_mult') < math.pow(3, #find_joker('togekiss')) * G.GAME.probabilities.normal/5 then"
-match_indent = true
-overwrite = true
-
-# Togekiss Triple Odds - Money
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = "if pseudorandom('lucky_money') < G.GAME.probabilities.normal/15 then"
-position = "at"
-payload = "if pseudorandom('lucky_money') < math.pow(3, #find_joker('togekiss')) * G.GAME.probabilities.normal/15 then"
-match_indent = true
-overwrite = true
-
-# Togekiss Triple Odds - Card Description
-[[patches]]
-[patches.pattern]
-target = "functions/common_events.lua"
-pattern = "elseif _c.effect == 'Lucky Card' then loc_vars = {G.GAME.probabilities.normal, cfg.mult, 5, cfg.p_dollars, 15}"
-position = "at"
-payload = "elseif _c.effect == 'Lucky Card' then loc_vars = {math.pow(3, #find_joker('togekiss')) * G.GAME.probabilities.normal, cfg.mult, 5, cfg.p_dollars, 15}"
-match_indent = true
-overwrite = true
-
 # Controller support for reserving
 [[patches]]
 [patches.pattern]
@@ -689,87 +673,6 @@ offset = {x=(args.type == 'sell' and -1 or 1)*((args.card_width or 0) - 0.17 - a
 '''
 match_indent = true
 
-# Hazard negative logic
-[[patches]]
-[patches.pattern]
-target = "cardarea.lua"
-pattern = "function CardArea:emplace(*"
-position = "after"
-payload = '''
-    if not card.debuff and card.ability and card.ability.card_limit and (self == G.hand) then
-        self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) + card.ability.card_limit
-        self.config.card_limit = math.max(0, self.config.real_card_limit)
-    end
-'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "cardarea.lua"
-pattern = "card:remove_from_area()"
-position = "before"
-payload = '''
-if not card.debuff and card.ability and card.ability.card_limit and (self == G.hand) then
-    self.config.real_card_limit = (self.config.real_card_limit or self.config.card_limit) - card.ability.card_limit
-    self.config.card_limit = math.max(0, self.config.real_card_limit)
-end
-'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "limit = limit - 1 + (not card.debuff and card.edition and card.edition.card_limit or 0)"
-position = "at"
-payload = """limit = limit - 1 + (not card.debuff and (card.edition and card.edition.card_limit or card.ability and card.ability.card_limit) or 0)"""
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = '''
-if self.ability and old_center and old_center.config.bonus then
-    self.ability.bonus = self.ability.bonus - old_center.config.bonus
-end
-'''
-position = "after"
-payload = '''
-if self.ability and old_center and old_center.config.card_limit then
-    if self.area == G.hand and not self.debuff then
-      if G.hand.config.real_card_limit then
-        G.hand.config.real_card_limit = G.hand.config.real_card_limit - self.ability.card_limit
-      end
-      G.hand.config.card_limit = G.hand.config.card_limit - self.ability.card_limit
-    end
-    self.ability.card_limit = self.ability.card_limit - old_center.config.card_limit
-end
-'''
-match_indent = true
-
-[[patches]]
-[patches.pattern]
-target = "card.lua"
-pattern = '''
-if self.ability.perishable and self.ability.perish_tally <= 0 then 
-    if not self.debuff then
-        self.debuff = true
-        if self.area == G.jokers then self:remove_from_deck(true) end
-    end
-    return
-end
-'''
-position = "after"
-payload = '''
-if not should_debuff and self.area == G.hand and self.ability and self.ability.card_limit and self.debuff then
-  if G.hand.config.real_card_limit then
-    G.hand.config.real_card_limit = G.hand.config.real_card_limit + self.ability.card_limit
-  end
-  G.hand.config.card_limit = G.hand.config.card_limit + self.ability.card_limit
-  draw_card(G.deck,G.hand, nil,'up', true)
-end
-'''
-match_indent = true
-
 #Smeargle Tooltip loc_vars fix
 [[patches]]
 [patches.pattern]
@@ -787,12 +690,35 @@ match_indent = true
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
-pattern = "new_card:set_base(other.config.card)"
+pattern = '''
+new_card:set_base(other.config.card)
+'''
 position = "after"
 payload = '''
 if other.config.center.name == "smeargle" then
   other.ability.extra.copy_joker = nil
   other.ability.extra.copy_pos = 0
+end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = '''
+for k, v in pairs(other.ability) do
+    if type(v) == 'table' then 
+        new_card.ability[k] = copy_table(v)
+    else
+        new_card.ability[k] = v
+    end
+end
+'''
+position = "after"
+payload = '''
+if other.config.center.name == "ruins_of_alph" then
+  new_card.ability.extra.forms = {}
+  new_card.ability.extra.merged = 0
 end
 '''
 match_indent = true
@@ -836,5 +762,117 @@ payload = '''
 if not hook then
   SMODS.calculate_context({post_discard = true})
 end
+'''
+match_indent = true
+
+#Lapras fix
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "if G.shop and not G.shop.alignment.offset.py then"
+position = "after"
+payload = "if G.GAME.lapras_skip then G.shop.alignment.offset.y = -5.3 end"
+match_indent = true
+
+# init Double-click detection variables
+[[patches]]
+[patches.pattern]
+target = "engine/controller.lua"
+pattern = "function Controller:init()"
+position = "after"
+payload = '''
+    -- Double-click detection variables
+    self.last_click_target = nil
+    self.last_click_time = 0
+    self.DOUBLE_CLICK_WINDOW = 0.3
+'''
+match_indent = false
+
+# register double-click trigger function
+[[patches]]
+[patches.regex]
+target = "engine/controller.lua"
+pattern = "function Controller:L_cursor_press([\\s\\S]+?)^end"
+position = "at"
+payload = '''
+function Controller:L_cursor_press(x, y)
+    x = x or self.cursor_position.x
+    y = y or self.cursor_position.y
+
+    if ((self.locked) and (not G.SETTINGS.paused or G.screenwipe)) or (self.locks.frame) then return end
+
+    -- 双击检测逻辑开始
+    local current_time = love.timer.getTime() -- 使用引擎计时器
+    local press_node = (self.HID.touch and self.cursor_hover.target) or self.hovering.target or self.focused.target
+
+    if self.last_click_target and
+       self.last_click_target == press_node and
+       current_time - self.last_click_time <= self.DOUBLE_CLICK_WINDOW and
+       press_node and press_node.is and press_node:is(Card)
+    then
+        -- 条件满足，确认为双击！
+        G.double_clicked_card = press_node
+
+        -- 重置状态并阻止后续的单击/拖拽
+        self.last_click_target = nil
+        self.last_click_time = 0
+        return
+    else
+        -- 记录为第一次单击
+        self.last_click_target = press_node
+        self.last_click_time = current_time
+    end
+    -- 双击检测逻辑结束
+
+    -- 如果不是双击，则执行游戏原有的单击按下逻辑
+    self.cursor_down.T = {x = x / (G.TILESCALE * G.TILESIZE), y = y / (G.TILESCALE * G.TILESIZE)}
+    self.cursor_down.time = G.TIMERS.TOTAL
+    self.cursor_down.handled = false
+    self.cursor_down.target = nil
+    self.is_cursor_down = true
+
+    if press_node then
+        self.cursor_down.target = press_node.states.click.can and press_node or press_node:can_drag() or nil
+    end
+
+    if self.cursor_down.target == nil then
+        self.cursor_down.target = G.ROOM
+    end
+end
+'''
+match_indent = false
+
+# hook double-click trigger function
+[[patches]]
+[patches.pattern]
+target = "engine/controller.lua"
+pattern = "function Controller:update(dt)"
+position = "after"
+payload = '''
+    -- 每一帧都调用触发检查函数 (替代SMODS.register_hook)
+    if G.FUNCS.check_double_click_trigger then
+        G.FUNCS.check_double_click_trigger()
+    end
+'''
+match_indent = false
+
+# Garbodor functionality
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "G.GAME.current_round.discards_used = G.GAME.current_round.discards_used + 1"
+position = "after"
+payload = '''
+G.GAME.poke_ante_discards_used = (G.GAME.poke_ante_discards_used or 0) + 1
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "G.GAME.round_resets.ante = G.GAME.round_resets.ante + mod"
+position = "after"
+payload = '''
+G.GAME.poke_ante_discards_used = 0
 '''
 match_indent = true

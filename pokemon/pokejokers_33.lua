@@ -11,6 +11,7 @@ local wugtrio={
   cost = 6, 
   stage = "One", 
   atlas = "Pokedex9",
+  gen = 9,
   ptype = "Water",
   blueprint_compat = true,
   calculate = function(self, card, context)
@@ -84,6 +85,7 @@ local annihilape={
   stage = "Two", 
   ptype = "Fighting",
   atlas = "Pokedex9",
+  gen = 9,
   blueprint_compat = true,
   calculate = function(self, card, context)
     if context.individual and context.cardarea == G.play and not context.other_card.debuff then
@@ -108,7 +110,10 @@ local farigiraf={
   config = {extra = {Xmult_multi = 2.2, score = false}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = { set = 'Spectral', key = 'c_cryptid', vars = {2}}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {set = 'Other', key = 'holding', vars = {"Cryptid"}}
+      info_queue[#info_queue+1] = { set = 'Spectral', key = 'c_cryptid', vars = {2}}
+    end
     return {vars = {center.ability.extra.Xmult_multi}}
   end,
   rarity = "poke_safari",
@@ -116,6 +121,7 @@ local farigiraf={
   stage = "One",
   ptype = "Psychic",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -173,8 +179,10 @@ local dudunsparce={
     local alt_key = nil
     if center.ability.extra.form == 1 then
       alt_key = "j_poke_dudunsparce2"
-      info_queue[#info_queue+1] = {key = 'tag_coupon', set = 'Tag'}
-      info_queue[#info_queue+1] = {set = 'Other', key = 'holding', vars = {"Coupon Tag"}}
+      if pokermon_config.detailed_tooltips then
+        info_queue[#info_queue+1] = {key = 'tag_coupon', set = 'Tag'}
+        info_queue[#info_queue+1] = {set = 'Other', key = 'holding', vars = {"Coupon Tag"}}
+      end
     end
     return {vars = {center.ability.extra.card_slots, center.ability.extra.pack_slots, center.ability.extra.voucher_slots}, key = alt_key}
   end,
@@ -183,6 +191,7 @@ local dudunsparce={
   stage = "One",
   ptype = "Colorless",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = true,
   blueprint_compat = false,
   eternal_compat = true,
@@ -196,9 +205,9 @@ local dudunsparce={
   end,
   set_sprites = function(self, card, front)
     if card.ability and card.ability.extra and card.ability.extra.form == 1 then
-      card.children.center:set_sprite_pos({x = 6, y = 6})
+      card.children.center:set_sprite_pos({x = 8, y = 3})
     else
-      card.children.center:set_sprite_pos({x = 5, y = 6})
+      card.children.center:set_sprite_pos({x = 6, y = 3})
     end
   end,
   add_to_deck = function(self, card, from_debuff)
@@ -206,15 +215,18 @@ local dudunsparce={
     SMODS.change_booster_limit(card.ability.extra.pack_slots)
     SMODS.change_voucher_limit(card.ability.extra.voucher_slots)
     if card.ability.extra.form == 1 then
-      G.E_MANAGER:add_event(Event({
-        func = (function()
-            add_tag(Tag('tag_coupon'))
-            play_sound('generic1', 0.9 + math.random()*0.1, 0.8)
-            play_sound('holo1', 1.2 + math.random()*0.1, 0.4)
-            return true
-        end)
-      }))
-      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('poke_wowthree')})
+      self:set_sprites(card)
+      if not from_debuff then
+        G.E_MANAGER:add_event(Event({
+          func = (function()
+              add_tag(Tag('tag_coupon'))
+              play_sound('generic1', 0.9 + math.random()*0.1, 0.8)
+              play_sound('holo1', 1.2 + math.random()*0.1, 0.4)
+              return true
+          end)
+        }))
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('poke_wowthree')})
+      end
     end
   end,
   remove_from_deck = function(self, card, from_debuff)

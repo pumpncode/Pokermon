@@ -3,245 +3,203 @@
 local lovely = require("lovely")
 
 --Load all Atlas
-SMODS.Atlas({
-    key = "modicon",
-    path = "icon.png",
-    px = 32,
-    py = 32
-})
+local joker_basic_atlases = {"Gen01", "Gen02", "Gen03", "Gen04", "Gen05", "Gen06", "Gen07", "Gen08", "Gen09", "Natdex", "Others"}
+local basic_prefix = "AtlasJokersBasic"
+local series_a_prefix = "AtlasJokersSeriesA"
+
+for i = 1, #joker_basic_atlases do
+  local atlas_base = basic_prefix..joker_basic_atlases[i]
+  local atlas_shiny = atlas_base.."Shiny"
+  --load normal and shiny atlas
+  SMODS.Atlas({
+    key = atlas_base,
+    path = 'Basic Series/'..atlas_base..".png",
+    px = 71,
+    py = 95
+  }):register()
+
+  SMODS.Atlas({
+    key = atlas_shiny,
+    path = 'Basic Series/'..atlas_shiny..".png",
+    px = 71,
+    py = 95
+  }):register()
+  if joker_basic_atlases[i] ~= "Others" then
+    local atlas_seriesa = series_a_prefix..joker_basic_atlases[i]
+    local atlas_seriesa_shiny = atlas_seriesa.."Shiny"
+    --load normal and shiny atlas
+    SMODS.Atlas({
+      key = atlas_seriesa,
+      path = 'Series A/'..atlas_seriesa..".png",
+      px = 71,
+      py = 95
+    }):register()
+
+    SMODS.Atlas({
+      key = atlas_seriesa_shiny,
+      path = 'Series A/'..atlas_seriesa_shiny..".png",
+      px = 71,
+      py = 95
+    }):register()
+  end
+end
 
 SMODS.Atlas({
-    key = "Pokedex1",
-    path = "Pokedex1.png",
+    key = "AtlasJokersSeriesBNatdex",
+    path = "Series B/AtlasJokersSeriesBNatdex.png",
     px = 71,
     py = 95
 }):register()
 
 SMODS.Atlas({
-    key = "Shinydex1",
-    path = "Shinydex1.png",
+    key = "AtlasJokersSeriesBNatdexShiny",
+    path = "Series B/AtlasJokersSeriesBNatdexShiny.png",
     px = 71,
     py = 95
 }):register()
 
 SMODS.Atlas({
-    key = "Pokedex2",
-    path = "Pokedex2.png",
+    key = "AtlasBoosterpacksBasic",
+    path = "Basic Series/AtlasBoosterpacksBasic.png",
     px = 71,
     py = 95
 }):register()
 
 SMODS.Atlas({
-    key = "Shinydex2",
-    path = "Shinydex2.png",
+    key = "AtlasBoosterpacksSeriesA",
+    path = "Series A/AtlasBoosterpacksSeriesA.png",
     px = 71,
     py = 95
 }):register()
 
 SMODS.Atlas({
-    key = "Pokedex3",
-    path = "Pokedex3.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex3",
-    path = "Shinydex3.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Pokedex4",
-    path = "Pokedex4.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex4",
-    path = "Shinydex4.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Pokedex5",
-    path = "Pokedex5.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex5",
-    path = "Shinydex5.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Pokedex6",
-    path = "Pokedex6.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex6",
-    path = "Shinydex6.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Pokedex7",
-    path = "Pokedex7.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex7",
-    path = "Shinydex7.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Pokedex8",
-    path = "Pokedex8.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex8",
-    path = "Shinydex8.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Pokedex9",
-    path = "Pokedex9.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinydex9",
-    path = "Shinydex9.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Regionals",
-    path = "Regionals.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "ShinyRegionals",
-    path = "ShinyRegionals.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Mart",
-    path = "Mart.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "pokepack",
-    path = "pokepacks.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "pinkseal",
-    path = "pinkseal.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "pokevouchers",
-    path = "pokevouchers.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Megas",
-    path = "Megas.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "ShinyMegas",
-    path = "ShinyMegas.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "others",
-    path = "others.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "Shinyothers",
-    path = "Shinyothers.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "pokeboss",
+    key = "AtlasBossblinds",
     atlas_table = "ANIMATION_ATLAS",
-    path = "pokeboss.png",
+    path = "AtlasBossblinds.png",
     px = 34,
     py = 34,
     frames = 21,
 }):register()
 
 SMODS.Atlas({
-    key = "poketag",
-    path = "poketag.png",
-    px = 34,
-    py = 34,
+    key = "AtlasConsumablesBasic",
+    path = "Basic Series/AtlasConsumablesBasic.png",
+    px = 71,
+    py = 95
 }):register()
 
 SMODS.Atlas({
-    key = "pokedeck",
-    path = "pokedeck.png",
+    key = "AtlasConsumablesSeriesA",
+    path = "Series A/AtlasConsumablesSeriesA.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasDecksBasic",
+    path = "Basic Series/AtlasDecksBasic.png",
     px = 71,
     py = 95,
 }):register()
 
 SMODS.Atlas({
-      key = "pokesleeves",
-      path = "pokesleeves.png",
-      px = 71,
-      py = 95
-  }):register()
+    key = "AtlasDecksSeriesA",
+    path = "Series A/AtlasDecksSeriesA.png",
+    px = 71, 
+    py = 95,
+}):register()
 
 SMODS.Atlas({
-    key = "shinyjoker",
-    path = "shinyjokersatlas.png",
+    key = "AtlasEnhancementsBasic",
+    path = "Basic Series/AtlasEnhancementsBasic.png",
+    px = 71,
+    py = 95,
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasEnhancementsSeriesA",
+    path = "Series A/AtlasEnhancementsSeriesA.png",
+    px = 71,
+    py = 95,
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasJokersVanillaShiny",
+    path = "AtlasJokersVanillaShiny.png",
+    px = 71,
+    py = 95,
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasStickersBasic",
+    path = "Basic Series/AtlasStickersBasic.png",
     px = 71,
     py = 95
 }):register()
+
+SMODS.Atlas({
+    key = "AtlasStickersSeriesA",
+    path = "Series A/AtlasStickersSeriesA.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasTags",
+    path = "AtlasTags.png",
+    px = 34,
+    py = 34,
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasVouchersBasic",
+    path = "Basic Series/AtlasVouchersBasic.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasVouchersSeriesA",
+    path = "Series A/AtlasVouchersSeriesA.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasJokersSeriesAVoltorb",
+    path = "Series A/AtlasJokersSeriesAVoltorb.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasJokersSeriesAVoltorbShiny",
+    path = "Series A/AtlasJokersSeriesAVoltorbShiny.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasJokersSeriesAElectrode",
+    path = "Series A/AtlasJokersSeriesAElectrode.png",
+    px = 71,
+    py = 95
+}):register()
+
+SMODS.Atlas({
+    key = "AtlasJokersSeriesAElectrodeShiny",
+    path = "Series A/AtlasJokersSeriesAElectrodeShiny.png",
+    px = 71,
+    py = 95
+}):register()
+
+
+SMODS.Atlas({
+    key = "modicon",
+    path = "icon.png",
+    px = 32,
+    py = 32
+})
 
 SMODS.Atlas({
     key = "placeholder_item",
@@ -272,48 +230,6 @@ SMODS.Atlas({
 }):register()
 
 SMODS.Atlas({
-    key = "jirachi",
-    path = "jirachi.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "shinyjirachi",
-    path = "shinyjirachi.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "altjirachi",
-    path = "altjirachi.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "shinyaltjirachi",
-    path = "shinyaltjirachi.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "unown_dex",
-    path = "UnownDex.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
-    key = "shiny_unown_dex",
-    path = "ShinyUnownDex.png",
-    px = 71,
-    py = 95
-}):register()
-
-SMODS.Atlas({
     key = "smeargle_logo",
     path = "smeargle_logo.png",
     px = 300,
@@ -337,8 +253,12 @@ SMODS.Sound({
 	key = "pocket_music_high",
 	path = "pocket_music_high.ogg",
 	select_music_track = function()
-		return G.STATE and G.STATE == G.STATES.SMODS_BOOSTER_OPENED and SMODS.OPENED_BOOSTER.label:find("Pocket")
+		return G.STATE and G.STATE == G.STATES.SMODS_BOOSTER_OPENED and (SMODS.OPENED_BOOSTER.label:find("Pocket") or SMODS.OPENED_BOOSTER.label:find("Starter"))
 	end,
+})
+SMODS.Sound({
+	key = "energy_use",
+	path = "energy_use.ogg",
 })
 
 --Custom colors for Types (humplydinkle wuz here)
@@ -385,3 +305,378 @@ if (SMODS.Mods["malverk"] or {}).can_load then
       }
     })
 end
+
+--Deck Skins
+--RBY sprites skins by GAME FREAK, arranged by Catzzadilla
+local RBYspades = SMODS.Atlas{
+    key = 'RBY_Spades_atlas',
+    path = 'DeckskinRBYSpades.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYclubs = SMODS.Atlas{
+    key = 'RBY_Clubs_atlas',
+    path = 'DeckskinRBYClubs.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYhearts = SMODS.Atlas{
+    key = 'RBY_Hearts_atlas',
+    path = 'DeckskinRBYHearts.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYdiamonds = SMODS.Atlas{
+    key = 'RBY_Diamonds_atlas',
+    path = 'DeckskinRBYDiamonds.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYspadesHC = SMODS.Atlas{
+    key = 'RBY_Spades_HC_atlas',
+    path = 'DeckskinRBYSpadesHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYclubsHC = SMODS.Atlas{
+    key = 'RBY_Clubs_HC_atlas',
+    path = 'DeckskinRBYClubsHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYheartsHC = SMODS.Atlas{
+    key = 'RBY_Hearts_HC_atlas',
+    path = 'DeckskinRBYHeartsHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local RBYdiamondsHC = SMODS.Atlas{
+    key = 'RBY_Diamonds_HC_atlas',
+    path = 'DeckskinRBYDiamondsHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+SMODS.DeckSkin {
+	key = "RBY_Spades_Skins",
+	suit = "Spades",
+	loc_txt = {
+        ['en-us'] = 'RBY Sprites: Ghost Trio'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYspades.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYspadesHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+SMODS.DeckSkin {
+	key = "RBY_Clubs_Skins",
+	suit = "Clubs",
+	loc_txt = {
+        ['en-us'] = 'RBY Sprites: Fossil Trio'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYclubs.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYclubsHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+SMODS.DeckSkin {
+	key = "RBY_Hearts_Skins",
+	suit = "Hearts",
+	loc_txt = {
+        ['en-us'] = 'RBY Sprites: Eeveelution Trio'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYhearts.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYheartsHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+SMODS.DeckSkin {
+	key = "RBY_Diamonds_Skins",
+	suit = "Diamonds",
+	loc_txt = {
+        ['en-us'] = 'RBY Sprites: Dragon Trio'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYdiamonds.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = RBYdiamondsHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+-- GSC Sprites Skins by GAME FREAK, arranged by Catzzadilla
+
+local GSCmorning = SMODS.Atlas{
+    key = 'GSC_morning_atlas',
+    path = 'DeckskinGSCSpadesMorning.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCevening = SMODS.Atlas{
+    key = 'GSC_evening_atlas',
+    path = 'DeckskinGSCSpadesEvening.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCclubs = SMODS.Atlas{
+    key = 'GSC_clubs_atlas',
+    path = 'DeckskinGSCClubs.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSChearts = SMODS.Atlas{
+    key = 'GSC_Hearts_atlas',
+    path = 'DeckskinGSCHearts.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCdiamonds = SMODS.Atlas{
+    key = 'GSC_Diamonds_atlas',
+    path = 'DeckskinGSCDiamonds.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCmorningHC = SMODS.Atlas{
+    key = 'GSC_morning_HC_atlas',
+    path = 'DeckskinGSCSpadesMorningHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCeveningHC = SMODS.Atlas{
+    key = 'GSC_evening_HC_atlas',
+    path = 'DeckskinGSCSpadesEveningHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCclubsHC = SMODS.Atlas{
+    key = 'GSCClubs_HC_atlas',
+    path = 'DeckskinGSCClubsHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCheartsHC = SMODS.Atlas{
+    key = 'GSC_Hearts_HC_atlas',
+    path = 'DeckskinGSCHeartsHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+local GSCdiamondsHC = SMODS.Atlas{
+    key = 'GSCDiamonds_HC_atlas',
+    path = 'DeckskinGSCDiamondsHC.png',
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+SMODS.DeckSkin {
+	key = "GSC_Spades_Skins",
+	suit = "Spades",
+	loc_txt = {
+        ['en-us'] = 'GSC Sprites: Day and Night'
+    },
+	palettes = {
+		{
+			key = 'morninglc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCmorning.key,
+			loc_txt = {
+        		['en-us'] = 'Morning'
+    		},
+			pos_style = 'collab',
+		},
+		{
+			key = 'eveninglc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCevening.key,
+			loc_txt = {
+        		['en-us'] = 'Evening'
+    		},
+			pos_style = 'collab',
+		},
+		{
+			key = 'morninghc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCmorningHC.key,
+			loc_txt = {
+        		['en-us'] = 'Morning (High Contrast)'
+    		},
+			pos_style = 'collab',
+			hc_default = true,
+		},
+		{
+			key = 'eveninghc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCeveningHC.key,
+			loc_txt = {
+        		['en-us'] = 'Evening (High Contrast)'
+    		},
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+SMODS.DeckSkin {
+	key = "GSC_Clubs_skins",
+	suit = "Clubs",
+	loc_txt = {
+        ['en-us'] = 'GSC Sprites: Mystic Mons'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCclubs.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCclubsHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+SMODS.DeckSkin {
+	key = "GSC_Hearts_Skins",
+	suit = "Hearts",
+	loc_txt = {
+        ['en-us'] = 'GSC Sprites: Allies of Ash'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSChearts.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCheartsHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}
+
+SMODS.DeckSkin {
+	key = "GSC_Diamonds_Skins",
+	suit = "Diamonds",
+	loc_txt = {
+        ['en-us'] = 'GSC Sprites: Johto Giants'
+    },
+	palettes = {
+		{
+			key = 'lc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCdiamonds.key,
+			pos_style = 'collab',
+		},
+		{
+			key = 'hc',
+			ranks = {'Jack', 'Queen', "King",},
+			display_ranks = {"King", "Queen", "Jack"},
+			atlas = GSCdiamondsHC.key,
+			pos_style = 'collab',
+			hc_default = true,
+		},
+	},
+}

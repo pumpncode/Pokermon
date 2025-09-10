@@ -8,11 +8,12 @@ local snorunt={
     return {vars = {center.ability.extra.debt, center.ability.extra.rounds}}
   end,
   rarity = 1,
-  cost = 4,
+  cost = 2,
   item_req = "dawnstone",
   stage = "Basic",
   ptype = "Water",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -53,6 +54,7 @@ local glalie={
   stage = "One",
   ptype = "Water",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -83,6 +85,40 @@ local glalie={
 -- Gorebyss 368
 -- Relicanth 369
 -- Luvdisc 370
+local luvdisc={
+  name = "luvdisc",
+  pos = {x = 1, y = 12},
+  config = {extra = {}},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.c_poke_heartscale
+      info_queue[#info_queue+1] = {set = 'Other', key = 'holding', vars = {"Heart Scale"}}
+      info_queue[#info_queue+1] = { set = 'Joker', key = 'j_splash', config={}}
+    end
+    return {vars = {}}
+  end,
+  rarity = 1,
+  cost = 4,
+  gen = 1,
+  stage = "Basic",
+  ptype = "Water",
+  atlas = "Pokedex3",
+  perishable_compat = true,
+  blueprint_compat = true,
+  eternal_compat = true,
+  calculate = function(self, card, context)
+  end,
+  add_to_deck = function(self, card, from_debuff)
+    if not from_debuff and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
+      local _card = create_card('Item', G.consumeables, nil, nil, nil, nil, 'c_poke_heartscale')
+      _card:add_to_deck()
+      G.consumeables:emplace(_card)
+      card_eval_status_text(_card, 'extra', nil, nil, nil, {message = localize('poke_plus_pokeitem'), colour = G.C.FILTER})
+      return true
+    end
+  end,
+}
 -- Bagon 371
 -- Shelgon 372
 -- Salamence 373
@@ -90,16 +126,18 @@ local glalie={
 local beldum={
   name = "beldum", 
   pos = {x = 5, y = 12},
-  config = {extra = {chips = 0, chip_mod = 8, size = 4}, evo_rqmt = 64},
+  config = {extra = {chips = 0, chip_mod = 4, size = 4}, evo_rqmt = 50},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    return {vars = {center.ability.extra.chips, center.ability.extra.chip_mod, center.ability.extra.size}}
+    return {vars = {center.ability.extra.chips, center.ability.extra.chip_mod, center.ability.extra.size, self.config.evo_rqmt}}
   end,
   rarity = 2, 
   cost = 6, 
   stage = "Basic", 
   ptype = "Metal",
   atlas = "Pokedex3",
+  gen = 3,
+  pseudol = true,
   perishable_compat = false,
   blueprint_compat = true,
   calculate = function(self, card, context)
@@ -133,16 +171,17 @@ local beldum={
 local metang={
   name = "metang", 
   pos = {x = 6, y = 12},
-  config = {extra = {chips = 0, chip_mod = 16, size = 4}, evo_rqmt = 256},
+  config = {extra = {chips = 0, chip_mod = 8, size = 4}, evo_rqmt = 200},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    return {vars = {center.ability.extra.chips, center.ability.extra.chip_mod, center.ability.extra.size}}
+    return {vars = {center.ability.extra.chips, center.ability.extra.chip_mod, center.ability.extra.size, self.config.evo_rqmt}}
   end,
   rarity = "poke_safari", 
   cost = 8, 
   stage = "One", 
   ptype = "Metal",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = false,
   blueprint_compat = true,
   calculate = function(self, card, context)
@@ -176,7 +215,7 @@ local metang={
 local metagross={
   name = "metagross", 
   pos = {x = 7, y = 12},
-  config = {extra = {chips = 256,}},
+  config = {extra = {chips = 200,}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     return {vars = {center.ability.extra.chips}}
@@ -186,6 +225,7 @@ local metagross={
   stage = "Two", 
   ptype = "Metal",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = false,
   blueprint_compat = true,
   calculate = function(self, card, context)
@@ -201,7 +241,7 @@ local metagross={
     end
     if context.individual and context.cardarea == G.play and not context.end_of_round and context.scoring_name and context.scoring_name == "Four of a Kind" then
       local total_chips = poke_total_chips(context.other_card)
-      local Xmult = (total_chips)^(1/3)
+      local Xmult = (total_chips)^(1/4)
       if Xmult > 0 then
         return {
           x_mult = Xmult,
@@ -234,6 +274,7 @@ local jirachi = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = false,
   blueprint_compat = false,
   calculate = function(self, card, context)
@@ -258,6 +299,7 @@ local jirachi_banker = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
   aux_poke = true,
   no_collection = true,
   perishable_compat = false,
@@ -282,6 +324,7 @@ local jirachi_booster = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
   aux_poke = true,
   no_collection = true,
   perishable_compat = false,
@@ -300,6 +343,48 @@ local jirachi_booster = {
   end
 }
 
+local jirachi_invis = {
+  name = "jirachi_invis", 
+  pos = { x = 2, y = 1 },
+  soul_pos = { x = 3, y = 1 },
+  config = {extra = {}},
+  loc_vars = function(self, info_queue, card)
+    type_tooltip(self, info_queue, card)
+    return {vars = {}}
+  end,
+  rarity = 4,
+  cost = 20,
+  stage = "Legendary",
+  ptype = "Metal",
+  atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
+  perishable_compat = false,
+  blueprint_compat = false,
+  no_collection = true,
+  aux_poke = true,
+  calculate = function(self, card, context)
+    if context.setting_blind and not context.blueprint then
+      local other_joker = nil
+      for i = 1, #G.jokers.cards do
+        if G.jokers.cards[i] == card then other_joker = G.jokers.cards[i+1] end
+      end
+      if other_joker then
+        local copy = copy_card(other_joker, nil, nil, nil, other_joker.edition and other_joker.edition.negative)
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_duplicated_ex')})
+        copy:add_to_deck()
+        G.jokers:emplace(copy)
+        copy:start_materialize()
+        
+        remove(self, card, context)
+      end
+    end
+  end,
+  custom_pool_func = true,
+  in_pool = function(self)
+    return false
+  end
+}
+
 local jirachi_copy = {
   name = "jirachi_copy", 
   pos = { x = 2, y = 1 },
@@ -307,7 +392,9 @@ local jirachi_copy = {
   config = {extra = {energy_buff = 1}},
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
-    info_queue[#info_queue+1] = {set = 'Other', key = 'energize'}
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {set = 'Other', key = 'energize'}
+    end
     return {vars = {card.ability.extra.energy_buff}}
   end,
   rarity = 4,
@@ -315,6 +402,7 @@ local jirachi_copy = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
   aux_poke = true,
   no_collection = true,
   perishable_compat = false,
@@ -414,6 +502,7 @@ local jirachi_negging = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
   aux_poke = true,
   no_collection = true,
   perishable_compat = false,
@@ -436,7 +525,7 @@ local jirachi_power = {
   name = "jirachi_power", 
   pos = { x = 4, y = 0 },
   soul_pos = { x = 5, y = 0 },
-  config = {extra = {Xmult_multi = 2.4, every = 3, loyalty_remaining = 2}},
+  config = {extra = {Xmult_multi = 2, every = 3, loyalty_remaining = 2}},
   loc_vars = function(self, info_queue, card)
     type_tooltip(self, info_queue, card)
     return {vars = {card.ability.extra.Xmult_multi, card.ability.extra.every, localize{type = 'variable', key = (card.ability.extra.loyalty_remaining == 0 and 'loyalty_active' or 'loyalty_inactive'), vars = {card.ability.extra.loyalty_remaining}}}}
@@ -446,6 +535,7 @@ local jirachi_power = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
   aux_poke = true,
   no_collection = true,
   perishable_compat = false,
@@ -492,6 +582,7 @@ local jirachi_fixer = {
   stage = "Legendary",
   ptype = "Metal",
   atlas = pokermon_config.pokemon_altart and "jirachi" or "altjirachi",
+  gen = 3,
   aux_poke = true,
   no_collection = true,
   perishable_compat = false,
@@ -505,7 +596,8 @@ local jirachi_fixer = {
         end
       end
     end
-    if context.discard and G.GAME.current_round.discards_used == 0 and context.full_hand and #context.full_hand == 1 and context.other_card then
+    if context.discard and G.GAME.current_round.discards_used == 0 and context.full_hand and #context.full_hand == 1 and context.other_card and not card.ability.extra.triggered then
+      card.ability.extra.triggered = true
       return {
         delay = 0.45,
         remove = true,
@@ -514,8 +606,12 @@ local jirachi_fixer = {
     end
 
     if context.first_hand_drawn and not context.blueprint then
-      local eval = function() return (G.GAME.current_round.hands_played == 0 or G.GAME.current_round.discards_used == 0) and not G.RESET_JIGGLES end
+      local eval = function(card) return (G.GAME.current_round.hands_played == 0 or G.GAME.current_round.discards_used == 0) and not G.RESET_JIGGLES and not card.ability.extra.triggered end
       juice_card_until(card, eval, true)
+    end
+    
+    if context.end_of_round and not context.individual and not context.repetition then
+      card.ability.extra.triggered = nil
     end
   end,
   custom_pool_func = true,
@@ -530,5 +626,5 @@ local jirachi_fixer = {
 -- Torterra 389
 -- Chimchar 390
 return {name = "Pokemon Jokers 361-390", 
-        list = {snorunt, glalie, beldum, metang, metagross, jirachi, jirachi_banker, jirachi_booster, jirachi_power, jirachi_copy, jirachi_fixer},
+        list = {snorunt, glalie, luvdisc, beldum, metang, metagross, jirachi, jirachi_banker, jirachi_booster, jirachi_power, jirachi_invis, jirachi_fixer},
 }

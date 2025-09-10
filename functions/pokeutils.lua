@@ -148,7 +148,7 @@ poke_add_shop_card = function(add_card, card)
     card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('poke_plus_shop'), colour = G.C.GREEN})
 end
 
-poke_remove_card = function(target, card)
+poke_remove_card = function(target, card, trigger)
       if target.ability.name == 'Glass Card' then 
           target.shattered = true
       else 
@@ -159,7 +159,7 @@ poke_remove_card = function(target, card)
         card:juice_up(0.3, 0.5)
         return true end }))
       G.E_MANAGER:add_event(Event({
-          trigger = 'after',
+          trigger = trigger and trigger or 'after',
           delay = 0.2,
           func = function() 
               if target.ability.name == 'Glass Card' then 
@@ -465,7 +465,7 @@ G.FUNCS.evaluate_round = function()
       for i = #G.deck.cards, 1, -1 do
         local card = G.deck.cards[i]
         if SMODS.has_enhancement(card, "m_poke_hazard") then
-          card:remove()
+          card:set_ability(G.P_CENTERS.c_base, nil, true)
         end
       end
       return true
@@ -494,6 +494,21 @@ poke_add_hazards = function(ratio, flat)
   playing_card_joker_effects(hazards)
 end
 
+poke_set_hazards = function(amount)
+  for i = 1, amount do
+    local valid = {}
+    for k, v in pairs(G.deck.cards) do
+      if v.config.center == G.P_CENTERS.c_base then
+        valid[#valid + 1] = v
+      end
+    end
+    if #valid > 0 then
+      local card = pseudorandom_element(valid, pseudoseed('hazard'))
+      card:set_ability(G.P_CENTERS.m_poke_hazard, nil, true)
+    end
+  end
+end
+
 function poke_same_suit(hand)
   local ret = {}
   local suits = SMODS.Suit.obj_buffer
@@ -508,4 +523,21 @@ function poke_same_suit(hand)
     end
   end
   return false
+end
+
+function poke_get_rank(card)
+  local id = card.base.id
+  local rank = nil
+  if id == 14 then rank = "Ace"
+  elseif id == 13 then rank = "King"
+  elseif id == 12 then rank = "Queen"
+  elseif id == 11 then rank = "Jack"
+  else rank = ""..id end
+  return rank
+end
+
+function applies_splash()
+  return next(SMODS.find_card('j_poke_magikarp')) or
+  next(SMODS.find_card('j_poke_feebas')) or
+  next(SMODS.find_card('j_poke_luvdisc'))
 end

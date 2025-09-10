@@ -54,7 +54,7 @@ jd_def["j_poke_roggenrola"] = {
         local count = 0
         for _, playing_card in ipairs(G.hand.cards) do
             if playing_hand or not playing_card.highlighted then
-                if playing_card.facing and not (playing_card.facing == 'back') and not playing_card.debuff and SMODS.has_enhancement(playing_card, "m_poke_hazard") then
+                if playing_card.facing and not (playing_card.facing == 'back') and not playing_card.debuff and SMODS.has_no_rank(playing_card) then
                     count = count + JokerDisplay.calculate_card_triggers(playing_card, nil, true)
                 end
             end
@@ -74,7 +74,7 @@ jd_def["j_poke_boldore"] = {
         local count = 0
         for _, playing_card in ipairs(G.hand.cards) do
             if playing_hand or not playing_card.highlighted then
-                if playing_card.facing and not (playing_card.facing == 'back') and not playing_card.debuff and SMODS.has_enhancement(playing_card, "m_poke_hazard") then
+                if playing_card.facing and not (playing_card.facing == 'back') and not playing_card.debuff and SMODS.has_no_rank(playing_card) then
                     count = count + JokerDisplay.calculate_card_triggers(playing_card, nil, true)
                 end
             end
@@ -94,7 +94,7 @@ jd_def["j_poke_gigalith"] = {
         local count = 0
         for _, playing_card in ipairs(G.hand.cards) do
             if playing_hand or not playing_card.highlighted then
-                if playing_card.facing and not (playing_card.facing == 'back') and not playing_card.debuff and SMODS.has_enhancement(playing_card, "m_poke_hazard") then
+                if playing_card.facing and not (playing_card.facing == 'back') and not playing_card.debuff and SMODS.has_no_rank(playing_card) then
                     count = count + JokerDisplay.calculate_card_triggers(playing_card, nil, true)
                 end
             end
@@ -148,7 +148,27 @@ jd_def["j_poke_gigalith"] = {
 --	Archen
 --	Archeops
 --	Trubbish
+jd_def["j_poke_trubbish"] = {
+  text = {
+    { text = "+", colour = G.C.CHIPS },
+    { ref_table = "card.ability.extra", ref_value = "chips", retrigger_type = "mult", colour = G.C.CHIPS },
+    { text = " " },
+    { text = "+$",  colour = G.C.GOLD },
+    { ref_table = "card.joker_display_values", ref_value = "money", retrigger_type = "mult", colour = G.C.GOLD }
+  },
+  calc_function = function(card)
+    card.joker_display_values.money = (G.GAME and G.GAME.current_round.discards_used == 0 and G.GAME.current_round.discards_left > 0 and G.GAME.current_round.discards_left * card.ability.extra.money or 0)
+  end
+}
+
 --	Garbodor
+jd_def["j_poke_garbodor"] = {
+  text = {
+    { text = "+", colour = G.C.CHIPS },
+    { ref_table = "card.ability.extra", ref_value = "chips", retrigger_type = "mult", colour = G.C.CHIPS },
+  },
+}
+
 --	Zorua
 jd_def["j_poke_zorua"] = {
     reminder_text = {
@@ -308,7 +328,23 @@ jd_def["j_poke_vanilluxe"] = {
 --	Foongus
 --	Amoonguss
 --	Frillish
+jd_def["j_poke_frillish"] = {
+  text = {
+    { text = "+" },
+    { ref_table = "card.ability.extra", ref_value = "chips", retrigger_type = "mult" }
+  },
+  text_config = { colour = G.C.CHIPS }
+}
+
 --	Jellicent
+jd_def["j_poke_jellicent"] = {
+  text = {
+    { text = "+" },
+    { ref_table = "card.ability.extra", ref_value = "chips", retrigger_type = "mult" }
+  },
+  text_config = { colour = G.C.CHIPS }
+}
+
 --	Alomomola
 --	Joltik
 --	Galvantula
@@ -324,38 +360,45 @@ jd_def["j_poke_vanilluxe"] = {
 --	Beheeyem
 --	Litwick
 jd_def["j_poke_litwick"] = {
-    text = {
-        { text = "+" },
-        { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
-    },
-    text_config = { colour = G.C.MULT },
-    calc_function = function(card)
-        card.joker_display_values.mult = card.sell_cost * 1
+  text = {
+    { text = "+" },
+    { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
+  },
+  text_config = { colour = G.C.MULT },
+  calc_function = function(card)
+    if card.sell_cost >= 7 then
+      card.joker_display_values.mult = card.ability.extra.mult * 3
+    else
+      card.joker_display_values.mult = card.ability.extra.mult
     end
+  end
 }
 
 --	Lampent
 jd_def["j_poke_lampent"] = {
-    text = {
-        { text = "+" },
-        { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
-    },
-    text_config = { colour = G.C.MULT },
-    calc_function = function(card)
-        card.joker_display_values.mult = card.sell_cost * 2
-    end
+  text = {
+    { text = "+" },
+    { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
+  },
+  text_config = { colour = G.C.MULT },
+  calc_function = function(card)
+    card.joker_display_values.mult = card.sell_cost
+  end
 }
 
 --	Chandelure
 jd_def["j_poke_chandelure"] = {
-    text = {
-        { text = "+" },
-        { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
-    },
-    text_config = { colour = G.C.MULT },
-    calc_function = function(card)
-        card.joker_display_values.mult = card.sell_cost * 3
-    end
+  text = {
+    { text = "+" },
+    { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
+  },
+  text_config = { colour = G.C.MULT },
+  calc_function = function(card)
+    card.joker_display_values.mult = card.sell_cost
+  end,
+  mod_function = function(card, mod_joker)
+    return { x_mult = (card.sell_cost < 2 and mod_joker.ability.extra.Xmult_multi ^ JokerDisplay.calculate_joker_triggers(mod_joker) or nil) }
+  end
 }
 
 --	Axew

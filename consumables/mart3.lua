@@ -8,7 +8,7 @@ local prismscale = {
     return {vars = {self.config.max_highlighted, self.config.converted}}
   end,
   pos = { x = 3, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -66,14 +66,14 @@ local duskstone = {
     local jokers = (G.jokers and G.jokers.cards) and #G.jokers.cards or 0
     local joker_count = 0
     for i = 1, jokers do
-      if G.jokers.cards[i].sell_cost > 1 then
+      if G.jokers.cards[i].sell_cost > 1 or (G.GAME.round >= (card_info.round_on_add + card_info.rounds)) then
         joker_count = joker_count + 1
       end
     end
-    return {vars = {card_info.money, card_info.rounds, card_info.round_on_add + card_info.rounds, math.min(card_info.max, card_info.money * joker_count), card_info.max,}}
+    return {vars = {card_info.money, card_info.rounds, math.max(0, card_info.round_on_add + card_info.rounds - G.GAME.round), math.min(card_info.max, card_info.money * joker_count), card_info.max,}}
   end,
   pos = { x = 3, y = 4 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 3,
   evo_item = true,
   unlocked = true,
@@ -85,7 +85,7 @@ local duskstone = {
     set_spoon_item(card)
     local joker_count = 0
     for i = 1, #G.jokers.cards do
-      if G.jokers.cards[i].sell_cost > 1 then
+      if G.jokers.cards[i].sell_cost > 1 or (G.GAME.round >= (card.ability.extra.round_on_add + card.ability.extra.rounds)) then
         joker_count = joker_count + 1
         if not (G.GAME.round >= card.ability.extra.round_on_add + card.ability.extra.rounds) then
           poke_drain(card, G.jokers.cards[i], 1, true)
@@ -144,10 +144,10 @@ local dawnstone = {
       message = localize('poke_dawn_info1')
     end
   
-    return {vars = {hand_played or localize('poke_none'), math.min(money_limit, money), money_limit, message}}
+    return {vars = {hand_played and localize(hand_played, 'poker_hands') or localize('poke_none'), math.min(money_limit, money), money_limit, message}}
   end,
   pos = { x = 4, y = 4 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 3,
   evo_item = true,
   unlocked = true,
@@ -212,7 +212,7 @@ local hardstone = {
     return {vars = {self.config.max_highlighted, self.config.max_chips}}
   end,
   pos = { x = 5, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -250,6 +250,59 @@ local hardstone = {
   end
 }
 
+local heartscale = {
+  name = "heartscale",
+  key = "heartscale",
+  set = "Item",
+  config = {max_highlighted = 2, min_highlighted = 2, suit = "Hearts"},
+  loc_vars = function(self, info_queue, center)
+    return {vars = {self.config.max_highlighted, localize(self.config.suit, 'suits_plural')}}
+  end,
+  pos = { x = 9, y = 5 },
+  atlas = "AtlasConsumablesBasic",
+  cost = 2,
+  unlocked = true,
+  discovered = true,
+  use = function(self, card, area, copier)
+    set_spoon_item(card)
+    juice_flip(card)
+    local rightmost = G.hand.highlighted[1]
+    for i = 1, #G.hand.highlighted do
+      if G.hand.highlighted[i].T.x > rightmost.T.x then
+          rightmost = G.hand.highlighted[i]
+      end
+    end
+    for i = 1, #G.hand.highlighted do
+      G.E_MANAGER:add_event(Event({
+          trigger = 'after',
+          delay = 0.1,
+          func = function()
+              if G.hand.highlighted[i] ~= rightmost then
+                  copy_card(rightmost, G.hand.highlighted[i])
+              end
+              return true
+          end
+      }))
+    end
+    for i = 1, #G.hand.highlighted do
+      G.E_MANAGER:add_event(Event({
+          trigger = 'after',
+          delay = 0.1,
+          func = function()
+            G.hand.highlighted[i]:change_suit(self.config.suit)
+            return true
+          end
+      }))
+    end
+    juice_flip(card, true)
+    delay(0.5)
+    poke_unhighlight_cards()
+  end,
+  in_pool = function(self)
+    return false
+  end
+}
+
 return {name = "Items 3",
-        list = {prismscale, dawnstone,duskstone, hardstone}
+        list = {prismscale, dawnstone,duskstone, hardstone, heartscale}
 }

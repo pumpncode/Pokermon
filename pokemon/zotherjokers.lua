@@ -70,10 +70,11 @@ local everstone={
 local tall_grass={
   name = "tall_grass",
   pos = {x = 2, y = 0},
-  config = {extra = {odds = 2,}},
+  config = {extra = {num = 1, dem = 2}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    return {vars = {''..(G.GAME and G.GAME.probabilities.normal or 1), center.ability.extra.odds, }}
+    local num, dem = SMODS.get_probability_vars(center, center.ability.extra.num, center.ability.extra.dem, 'tall_grass')
+    return {vars = {num, dem }}
   end,
   rarity = 1,
   cost = 6,
@@ -93,7 +94,7 @@ local tall_grass={
           end
         end
         
-        if has_wild or pseudorandom('tallgrass') < G.GAME.probabilities.normal/card.ability.extra.odds then
+        if has_wild or SMODS.pseudorandom_probability(card, 'tall_grass', card.ability.extra.num, card.ability.extra.dem, 'tall_grass') then
           G.GAME.joker_buffer = G.GAME.joker_buffer + 1
           G.E_MANAGER:add_event(Event({trigger = 'after', delay = 0.4, func = function()
             G.GAME.joker_buffer = 0
@@ -325,7 +326,7 @@ local mystery_egg = {
       local prefix_config = "j_"..(card.config.center.poke_custom_prefix and card.config.center.poke_custom_prefix or "poke").."_"
       local poke_keys = {}
       for k, v in pairs(G.P_CENTERS) do
-        if string.sub(v.key,1,string.len(prefix_config)) == prefix_config and get_gen_allowed(v.atlas) and not v.aux_poke and pokemon_in_pool(v) and v.stage and type(v.rarity) == "number" then
+        if string.sub(v.key,1,string.len(prefix_config)) == prefix_config and get_gen_allowed(v) and not v.aux_poke and pokemon_in_pool(v) and v.stage and type(v.rarity) == "number" then
           if ((v.stage == "Baby" or v.stage == "Basic") and v.rarity ~= 4) then
             table.insert(poke_keys, {key = v.key, rarity = v.rarity})
           end
@@ -448,7 +449,7 @@ local rival = {
         
         G.E_MANAGER:add_event(Event({
           func = function()
-            remove(self, card, context)
+            remove(self, card, context, true)
             return true
           end
         }))
@@ -466,11 +467,11 @@ local rival = {
   end,
   set_sprites = function(self, card, front)
     if card.ability and card.ability.extra and card.ability.extra.form > 1 then
-      card.children.center:set_sprite_pos({x = 5, y = 1})
+      card.children.center:set_sprite_pos({x = 4, y = 2})
     elseif card.ability and card.ability.extra and card.ability.extra.form == 1 then
-      card.children.center:set_sprite_pos({x = 4, y = 1})
+      card.children.center:set_sprite_pos({x = 2, y = 2})
     else
-      card.children.center:set_sprite_pos({x = 3, y = 1})
+      card.children.center:set_sprite_pos({x = 0, y = 2})
     end
   end
 }
@@ -516,7 +517,7 @@ local ruins_of_alph={
             added = true
           end
         end
-        if added then table.sort(card.ability.extra.forms); poke_debug(card.ability.extra.forms) end
+        if added then table.sort(card.ability.extra.forms) end
       end
     end
     if context.setting_blind and not context.blueprint then
@@ -540,8 +541,12 @@ local ruins_of_alph={
       if card.ability.extra.merged >= 28 then
         temp_card = {set = "Joker", area = G.jokers, key = "j_poke_unown_swarm"}
         reward_card = SMODS.create_card(temp_card)
+        local _card = create_card('Spectral', G.consumeables, nil, nil, nil, nil, 'c_soul')
+              _card:add_to_deck()
+              G.consumeables:emplace(_card)
+              card_eval_status_text(_card, 'extra', nil, nil, nil, {message = localize('k_plus_spectral'), colour = G.C.SECONDARY_SET.Spectral})
       elseif card.ability.extra.merged >= 20 then
-        temp_card = {set = "Joker", area = G.jokers, key = "j_blueprint"}
+        temp_card = {set = "Joker", area = G.jokers, key = "j_brainstorm"}
         reward_card = SMODS.create_card(temp_card)
       elseif card.ability.extra.merged >= 10 then
         local jokers = {}
@@ -552,7 +557,7 @@ local ruins_of_alph={
         end
         if #jokers > 0 then
           local chosen_joker = pseudorandom_element(jokers, 'alph')
-          reward_card = copy_card(chosen_joker)
+          reward_card = copy_card(chosen_joker, nil, nil, nil, chosen_joker.edition and chosen_joker.edition.negative)
           card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_duplicated_ex')})
         else
           card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_no_other_jokers')})
@@ -581,18 +586,8 @@ local unown_swarm={
       card.children.center.VT.w = card.T.w * 1.174
     end},
   config = {extra = {mult = 28,Xmult_multi = 2.8,}},
-  loc_txt = {
-    name = "Unown Swarm",
-    text = {
-      "{C:attention}Holding{} {C:spectral}The Soul{}",
-      "Each {C:purple}Legendary{} Joker gives",
-      "{C:mult}+#1#{} Mult and {X:mult,C:white}X#2#{} Mult"
-    }
-  },
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = {set = 'Other', key = 'holding', vars = {"Soul"}}
-    info_queue[#info_queue+1] = { set = 'Spectral', key = 'c_soul'}
     return {vars = {center.ability.extra.mult, center.ability.extra.Xmult_multi, }}
   end,
   rarity = "poke_safari",
@@ -618,14 +613,6 @@ local unown_swarm={
         Xmult_mod = card.ability.extra.Xmult_multi,
         mult_mod = card.ability.extra.mult
       }
-    end
-  end,
-  add_to_deck = function(self, card, from_debuff)
-    if not from_debuff then
-      local _card = create_card('Spectral', G.consumeables, nil, nil, nil, nil, 'c_soul')
-      _card:add_to_deck()
-      G.consumeables:emplace(_card)
-      card_eval_status_text(_card, 'extra', nil, nil, nil, {message = localize('k_plus_spectral'), colour = G.C.SECONDARY_SET.Spectral})
     end
   end,
   set_sprites = function(self, card, front)
@@ -657,6 +644,7 @@ local billion_lions = {
   cost = 6,
   stage = "Legendary",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -693,12 +681,54 @@ local billion_lions = {
   end
 }
 
+local professor={
+  name = "professor",
+  pos = {x = 0, y = 1},
+  config = {extra = {rounds_total = 2, rounds_current = 0}},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    return {vars = {center.ability.extra.rounds_total, center.ability.extra.rounds_current}}
+  end,
+  rarity = 1,
+  cost = 6,
+  stage = "Other",
+  atlas = "others",
+  perishable_compat = true,
+  blueprint_compat = true,
+  eternal_compat = false,
+  calculate = function(self, card, context)
+    if context.selling_self and (card.ability.extra.rounds_current >= card.ability.extra.rounds_total) and not context.blueprint then
+      G.E_MANAGER:add_event(Event({
+          func = (function()
+              add_tag(Tag('tag_poke_starter_tag'))
+              play_sound('generic1', 0.9 + math.random() * 0.1, 0.8)
+              play_sound('holo1', 1.2 + math.random() * 0.1, 0.4)
+              return true
+          end)
+      }))
+    end
+    if context.end_of_round and context.game_over == false and context.main_eval and not context.blueprint then
+      card.ability.extra.rounds_current = card.ability.extra.rounds_current + 1
+      if card.ability.extra.rounds_current == card.ability.extra.rounds_total then
+          local eval = function(card) return not card.REMOVED end
+          juice_card_until(card, eval, true)
+      end
+      return {
+          message = (card.ability.extra.rounds_current < card.ability.extra.rounds_total) and
+              (card.ability.extra.rounds_current .. '/' .. card.ability.extra.rounds_total) or
+              localize('k_active_ex'),
+          colour = G.C.FILTER
+      }
+    end
+  end
+}
+
 if pokermon_config.pokemon_aprilfools then
   return {name = "Other Jokers",
-        list = {pokedex, everstone, tall_grass, jelly_donut, treasure_eatery, mystery_egg, rival, ruins_of_alph, unown_swarm, billion_lions}
+        list = {pokedex, everstone, tall_grass, jelly_donut, treasure_eatery, mystery_egg, rival, ruins_of_alph, unown_swarm, professor, billion_lions}
   }
 else
   return {name = "Other Jokers",
-        list = {pokedex, everstone, tall_grass, jelly_donut, treasure_eatery, mystery_egg, rival, ruins_of_alph, unown_swarm}
+        list = {pokedex, everstone, tall_grass, jelly_donut, treasure_eatery, mystery_egg, rival, ruins_of_alph, unown_swarm, professor}
   }
 end

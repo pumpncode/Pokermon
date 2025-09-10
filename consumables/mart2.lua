@@ -4,18 +4,25 @@ local moonstone = {
   name = "moonstone",
   key = "moonstone",
   set = "Item",
-  config = {max_highlighted = 5, min_highlighted = 1, odds = 2},
+  config = {min_highlighted = 1, num = 1, dem = 2},
   loc_vars = function(self, info_queue, center)
     info_queue[#info_queue+1] = {set = 'Other', key = 'eitem'}
     local handtext = localize('poke_none')
     if G.hand and G.hand.highlighted and #G.hand.highlighted > 0 then
       local text,disp_text,poker_hands,scoring_hand,non_loc_disp_text = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
-      handtext = text
+      handtext = localize(text, 'poker_hands') or localize('poke_none')
+      for k, v in pairs(G.hand.highlighted) do
+        if v.facing == "back" then
+          handtext = "????"
+          break
+        end
+      end
     end
-    return {vars = {handtext, ''..(G.GAME and G.GAME.probabilities.normal or 1), self.config.odds}}
+    local num, dem = SMODS.get_probability_vars(center, self.config.num, self.config.dem, 'moonstone')
+    return {vars = {handtext, num, dem}}
   end,
   pos = { x = 8, y = 3 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -24,7 +31,7 @@ local moonstone = {
     if G.jokers.highlighted and #G.jokers.highlighted == 1 and is_evo_item_for(self, G.jokers.highlighted[1]) then
       return true
     end
-    if G.hand.highlighted and #G.hand.highlighted >= self.config.min_highlighted and #G.hand.highlighted <= self.config.max_highlighted then
+    if G.hand.highlighted and #G.hand.highlighted >= self.config.min_highlighted then
       return true
     end
     return false
@@ -32,7 +39,7 @@ local moonstone = {
   use = function(self, card, area, copier)
     set_spoon_item(card)
     if #G.hand.highlighted >= self.config.min_highlighted then
-      if pseudorandom('moonstone') < G.GAME.probabilities.normal/self.config.odds then
+      if SMODS.pseudorandom_probability(card, 'moonstone', self.config.num, self.config.dem, 'moonstone') then
         local text,disp_text,poker_hands,scoring_hand,non_loc_disp_text = G.FUNCS.get_poker_hand_info(G.hand.highlighted)
 
         level_up_hand(card, text)
@@ -82,7 +89,7 @@ local sunstone = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 9, y = 3 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -127,7 +134,7 @@ local waterstone = {
     return {vars = {self.config.max_highlighted, self.config.max_chips}}
   end,
   pos = { x = 5, y = 3 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -176,7 +183,7 @@ local thunderstone = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 6, y = 3 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -231,7 +238,7 @@ local firestone = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 4, y = 3 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -272,14 +279,15 @@ local leafstone = {
   name = "leafstone",
   key = "leafstone",
   set = "Item",
-  config = {odds = 3},
+  config = {num = 1, dem = 3},
   loc_vars = function(self, info_queue, center)
     info_queue[#info_queue+1] = G.P_CENTERS.m_lucky
     info_queue[#info_queue+1] = {set = 'Other', key = 'eitem'}
-    return {vars = {''..(G.GAME and G.GAME.probabilities.normal or 1), self.config.odds,}}
+    local num, dem = SMODS.get_probability_vars(center, self.config.num, self.config.dem, 'leafstone')
+    return {vars = {num, dem}}
   end,
   pos = { x = 7, y = 3 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -295,7 +303,7 @@ local leafstone = {
     if G.hand.cards and #G.hand.cards > 0 then
       juice_flip_hand(card)
       for i = 1, #G.hand.cards do
-        if pseudorandom('leafstone') < G.GAME.probabilities.normal/self.config.odds then
+        if SMODS.pseudorandom_probability(card, 'leafstone', self.config.num, self.config.dem, 'leafstone') then
           G.hand.cards[i]:set_ability(G.P_CENTERS.m_lucky, nil, true)
         end
       end
@@ -321,7 +329,7 @@ local linkcable = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 6, y = 4 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -374,7 +382,7 @@ local leftovers = {
   end,
   pos = { x = 7, y = 4 },
   soul_pos = { x = 6, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 3,
   unlocked = true,
   discovered = true,
@@ -424,7 +432,7 @@ local leek = {
   key = "leek",
   set = "Item",
   helditem = true,
-  config = {extra = {odds = 2, usable = true}},
+  config = {extra = {num = 1, dem = 2, usable = true}},
   loc_vars = function(self, info_queue, center)
     info_queue[#info_queue+1] = {set = 'Other', key = 'endless'}
     local card = center or self
@@ -437,11 +445,12 @@ local leek = {
     if not card.edition or (card.edition and not card.edition.polychrome) then
       info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome
     end
-    return {vars = {''..(G.GAME and G.GAME.probabilities.normal or 1), card.ability and card.ability.extra.odds or card.config.extra.odds}}
+    local num, dem = SMODS.get_probability_vars(center, card.ability.extra.num, card.ability.extra.dem, 'leek')
+    return {vars = {num, dem}}
   end,
   pos = { x = 8, y = 4 },
   soul_pos = { x = 7, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 3,
   unlocked = true,
   discovered = true,
@@ -452,10 +461,9 @@ local leek = {
     return card.ability.extra.usable
   end,
   use = function(self, card, area, copier)
-    local item_chance = pseudorandom('leek')
     local removed = nil
     
-    if item_chance < G.GAME.probabilities.normal/card.ability.extra.odds then
+    if SMODS.pseudorandom_probability(card, 'leek', card.ability.extra.num, card.ability.extra.dem, 'leek') then
       local edition = poll_edition('wheel_of_fortune', nil, true, true)
       card:set_edition(edition, true)
     else
@@ -509,7 +517,7 @@ local thickclub = {
   end,
   pos = { x = 9, y = 4 },
   soul_pos = { x = 8, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 3,
   unlocked = true,
   discovered = true,
@@ -521,7 +529,7 @@ local thickclub = {
     if G.hand.highlighted and #G.hand.highlighted ~= 1 then return false end
     if G.STATE == G.STATES.SMODS_BOOSTER_OPENED or G.STATE == G.STATES.TAROT_PACK or G.STATE == G.STATES.SPECTRAL_PACK or G.STATE == G.STATES.PLANET_PACK
        or G.STATE == G.STATES.STANDARD_PACK then 
-      if #G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit then return false end
+      if (#G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit) and card.area == G.pack_cards then return false end
     end
     
     return card.ability.extra.usable
@@ -561,7 +569,7 @@ local teraorb = {
     info_queue[#info_queue+1] = {set = 'Other', key = 'typechanger', vars = {"Random Type", colours = {G.ARGS.LOC_COLOURS.pink}}}
   end,
   pos = { x = 9, y = 2 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 3,
   unlocked = true,
   discovered = true,
@@ -597,7 +605,7 @@ local metalcoat = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 6, y = 2 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   unlocked = true,
   discovered = true,
@@ -633,7 +641,7 @@ local dragonscale = {
     info_queue[#info_queue+1] = {set = 'Other', key = 'typechanger', vars = {"Dragon", colours = {G.ARGS.LOC_COLOURS.dragon}}}
   end,
   pos = { x = 7, y = 2 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -684,7 +692,7 @@ local kingsrock = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 5, y = 2 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -735,7 +743,7 @@ local upgrade = {
     return {vars = {self.config.max_highlighted}}
   end,
   pos = { x = 8, y = 2 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -777,7 +785,7 @@ local dubious_disc = {
     info_queue[#info_queue+1] = {set = 'Other', key = 'eitem'}
   end,
   pos = { x = 0, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -793,17 +801,7 @@ local dubious_disc = {
     if G.hand.cards and #G.hand.cards > 0 then
       juice_flip_hand(card)
       for i = 1, #G.hand.cards do
-        local enhancement_type = pseudorandom(pseudoseed('dubious'))
-        local enhancement = nil
-        if enhancement_type > .89 then enhancement = G.P_CENTERS.m_bonus
-        elseif enhancement_type > .78 then enhancement = G.P_CENTERS.m_mult
-        elseif enhancement_type > .67 then enhancement = G.P_CENTERS.m_wild
-        elseif enhancement_type > .56 then enhancement = G.P_CENTERS.m_glass
-        elseif enhancement_type > .45 then enhancement = G.P_CENTERS.m_steel
-        elseif enhancement_type > .34 then enhancement = G.P_CENTERS.m_stone
-        elseif enhancement_type > .23 then enhancement = G.P_CENTERS.m_gold
-        elseif enhancement_type > .12 then enhancement = G.P_CENTERS.m_lucky
-        else enhancement = G.P_CENTERS.c_base end
+        local enhancement = SMODS.poll_enhancement({guaranteed = true})
         G.hand.cards[i]:set_ability(enhancement, nil, true)
       end
       juice_flip_hand(card, true)
@@ -821,14 +819,15 @@ local icestone = {
   name = "icestone",
   key = "icestone",
   set = "Item",
-  config = {max_highlighted = 2, min_highlighted = 1, odds = 4},
+  config = {max_highlighted = 2, min_highlighted = 1, num = 1, dem = 4},
   loc_vars = function(self, info_queue, center)
     info_queue[#info_queue+1] = {set = 'Other', key = 'eitem'}
     info_queue[#info_queue+1] = G.P_CENTERS.m_glass
-    return {vars = {self.config.max_highlighted, ''..(G.GAME and G.GAME.probabilities.normal or 1), self.config.odds}}
+    local num, dem = SMODS.get_probability_vars(center, self.config.num, self.config.dem, 'icestone')
+    return {vars = {self.config.max_highlighted, num, dem}}
   end,
   pos = { x = 5, y = 4 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -851,7 +850,7 @@ local icestone = {
       end
       juice_flip(card, true)
       for i = 1, #G.hand.highlighted do
-        if pseudorandom(pseudoseed('icestone')) <  G.GAME.probabilities.normal/self.config.odds then
+        if SMODS.pseudorandom_probability(card, 'icestone', self.config.num, self.config.dem, 'icestone') then
           poke_remove_card(G.hand.highlighted[i], card)
         end
       end
@@ -879,7 +878,7 @@ local shinystone = {
     return {vars = {self.config.max_highlighted, self.config.drain_amt}}
   end,
   pos = { x = 2, y = 4 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   evo_item = true,
   unlocked = true,
@@ -920,7 +919,7 @@ local twisted_spoon = {
   key = "twisted_spoon",
   set = "Item",
   pos = { x = 1, y = 5 },
-  atlas = "Mart",
+  atlas = "AtlasConsumablesBasic",
   cost = 4,
   unlocked = true,
   discovered = true,

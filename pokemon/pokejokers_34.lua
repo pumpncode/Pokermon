@@ -13,6 +13,9 @@ local gimmighoul={
   config = {extra = {money = 3, money_goal = 999, money_seen = 0, previous_money = 0}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = G.P_CENTERS.m_gold
+    end
     return {vars = {center.ability.extra.money, center.ability.extra.money_seen, center.ability.extra.money_goal}}
   end,
   rarity = 3,
@@ -20,12 +23,13 @@ local gimmighoul={
   stage = "Basic",
   ptype = "Psychic",
   atlas = "Pokedex9",
+  gen = 9,
   enhancement_gate = 'm_gold',
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.individual and not context.end_of_round and context.cardarea == G.play and context.other_card.ability.name == 'Gold Card' then
+    if context.individual and not context.end_of_round and context.cardarea == G.play and SMODS.has_enhancement(context.other_card, 'm_gold') then
       local earned = ease_poke_dollars(card, "gimmi", card.ability.extra.money, true)
       return {
         dollars = earned,
@@ -90,6 +94,7 @@ local gimmighoulr={
   stage = "Basic",
   ptype = "Psychic",
   atlas = "Pokedex9",
+  gen = 9,
   aux_poke = true,
   perishable_compat = false,
   blueprint_compat = true,
@@ -130,6 +135,7 @@ local gholdengo={
   stage = "One",
   ptype = "Metal",
   atlas = "Pokedex9",
+  gen = 9,
   perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
@@ -146,7 +152,7 @@ local gholdengo={
         }
       end
     end
-    if context.individual and not context.end_of_round and context.cardarea == G.play and context.other_card.ability.name == 'Gold Card' then
+    if context.individual and not context.end_of_round and context.cardarea == G.play and SMODS.has_enhancement(context.other_card, 'm_gold') then
       if (SMODS.Mods["Talisman"] or {}).can_load then
         card.ability.extra.future_dollars = to_big(card.ability.extra.future_dollars) - to_big(card.ability.extra.money_minus)
         if to_big(card.ability.extra.future_dollars) >= to_big(0) then

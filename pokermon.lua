@@ -6,6 +6,7 @@ if SMODS.current_mod then
 end
 
 pokermon = {}
+SMODS.current_mod.optional_features = { quantum_enhancements = true }
 
 --Undiscovered sprites, mostly for testing some localization things since the game crashes without them
 --This can probably have a better integration or just be removed altogether since everything is discovered anyways
@@ -119,6 +120,22 @@ else
   sprite()
 end
 
+--Load API
+local api, load_error_api = SMODS.load_file("functions/apifunctions.lua")
+if load_error then
+  sendDebugMessage ("The error is: "..load_error)
+else
+  api()
+end
+
+--Load Sprites Load
+local sprite, load_error = SMODS.load_file("functions/pokespriteload.lua")
+if load_error then
+  sendDebugMessage ("The error is: "..load_error)
+else
+  sprite()
+end
+
 --Load Sprites file
 local sprite, load_error = SMODS.load_file("pokesprites.lua")
 if load_error then
@@ -127,15 +144,20 @@ else
   sprite()
 end
 
---Commenting this out for now since it doesn't work 100% of the time
---check_for_needed_config()
-
 --Load UI file
 local UI, load_error = SMODS.load_file("pokeui.lua")
 if load_error then
   sendDebugMessage ("The error is: "..load_error)
 else
   UI()
+end
+
+--Load quip file
+local quip, load_error = SMODS.load_file("pokequips.lua")
+if load_error then
+  sendDebugMessage ("The error is: "..load_error)
+else
+  quip()
 end
 
 --Load pokemon file
@@ -152,62 +174,13 @@ for _, file in ipairs(pfiles) do
     
     if curr_pokemon.list and #curr_pokemon.list > 0 then
       for i, item in ipairs(curr_pokemon.list) do
-        item.discovered = true
-        if not item.key then
-          item.key = item.name
-        end
-        if not item.custom_pool_func then
-          item.in_pool = function(self)
-            return pokemon_in_pool(self)
-          end
-        end
-        if not item.config then
-          item.config = {}
-        end
-        if item.ptype then
-          if item.config and item.config.extra then
-            item.config.extra.ptype = item.ptype
-          elseif item.config then
-            item.config.extra = {ptype = item.ptype}
-          end
-        end
-        item.set_badges = poke_set_type_badge
-        if item.item_req then
-          if item.config and item.config.extra then
-            item.config.extra.item_req = item.item_req
-          elseif item.config then
-            item.config.extra = {item_req = item.item_req}
-          end
-        end
-        if item.evo_list then
-          if item.config and item.config.extra then
-            item.config.extra.evo_list = item.evo_list
-          elseif item.config then
-            item.config.extra = {item_req = item.evo_list}
-          end
-        end
-        item.discovered = not pokermon_config.pokemon_discovery
-        if item.name == "wobbuffet" then item.discovered = true end
-        local prev_load = item.load
-        item.load = function(self, card, card_table, other_card)
-          card_table.ability.extra.juiced = nil
-          if type(self.calculate) == "function" then
-            G.E_MANAGER:add_event(Event({
-              func = function()
-                self.calculate(self, card, {poke_load = true})
-                return true
-              end
-            }))
-          end
-          if prev_load then
-            prev_load(self, card, card_table, other_card)
-          end
-        end
-        SMODS.Joker(item)
+        pokermon.load_pokemon(item)
       end
     end
   end
 end
+
+--This is a new comment
 
 --Load consumable types
 local pconsumable_types = NFS.getDirectoryItems(mod_dir.."consumable types")
@@ -242,7 +215,9 @@ for _, file in ipairs(pconsumables) do
     
     for i, item in ipairs(curr_consumable.list) do
       if not (item.pokeball and not pokermon_config.pokeballs) then
-        item.discovered = not pokermon_config.pokemon_discovery
+        if not item.poke_always_unlocked  then
+          item.discovered = not pokermon_config.pokemon_discovery
+        end
         SMODS.Consumable(item)
       end
     end
@@ -522,7 +497,7 @@ SMODS.PokerHandPart:take_ownership('_straight',
       func = function(hand) 
         local max = 5
         if next(SMODS.find_card('j_four_fingers')) then max = 4 end
-        if (next(SMODS.find_card('j_poke_aipom')) or next(SMODS.find_card('j_poke_ambipom'))) then max = 3 end
+        if (next(SMODS.find_card('j_poke_aipom')) or (#hand == 3 and next(SMODS.find_card('j_poke_ambipom')))) then max = 3 end
         return get_straight(hand, max, not not next(SMODS.find_card('j_shortcut'))) 
       end
     },
@@ -534,7 +509,7 @@ function get_flush(hand)
   local ret = prev_flush(hand)
   if #ret <= 0 then
     ret = {}
-    local aipom = (next(SMODS.find_card('j_poke_aipom')) or next(SMODS.find_card('j_poke_ambipom'))) 
+    local aipom = (next(SMODS.find_card('j_poke_aipom')) or (#hand == 3 and next(SMODS.find_card('j_poke_ambipom')))) 
     local suits = SMODS.Suit.obj_buffer
     if #hand < (5 - (aipom and 2 or 0)) then return ret else
       for j = 1, #suits do
@@ -555,6 +530,14 @@ function get_flush(hand)
     return ret
   end
 end
+
+function SMODS.current_mod.reset_game_globals(run_start)
+  reset_bulba_rank()
+  reset_espeon_card()
+  reset_gligar_suit()
+  reset_sneasel_rank()
+end
+
 --Tutorial WIP
 --[[
 local gu = Game.update

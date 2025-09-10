@@ -26,6 +26,7 @@ local shroomish={
   stage = "Basic",
   ptype = "Grass",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -33,10 +34,13 @@ local shroomish={
     if context.setting_blind then
       local bonus = pseudorandom('shroomish')
       if bonus > .66 then
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type = 'variable', key = 'a_hands', vars = {card.ability.extra.hands}}, colour = G.C.CHIPS})
         ease_hands_played(card.ability.extra.hands)
       elseif bonus > .33 then
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type = 'variable', key = 'poke_discards', vars = {card.ability.extra.d_size}}, colour = G.C.MULT})
         ease_discard(card.ability.extra.d_size)
       else
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_handsize',vars={card.ability.extra.h_size}}})
         G.hand:change_size(card.ability.extra.h_size)
         G.GAME.round_resets.temp_handsize = (G.GAME.round_resets.temp_handsize or 0) + card.ability.extra.h_size
       end
@@ -67,6 +71,7 @@ local breloom={
   stage = "One",
   ptype = "Grass",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -74,10 +79,13 @@ local breloom={
     if context.setting_blind then
       local bonus = pseudorandom('shroomish')
       if bonus > .66 then
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type = 'variable', key = 'a_hands', vars = {card.ability.extra.hands}}, colour = G.C.CHIPS})
         ease_hands_played(card.ability.extra.hands)
       elseif bonus > .33 then
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type = 'variable', key = 'poke_discards', vars = {card.ability.extra.d_size}}, colour = G.C.MULT})
         ease_discard(card.ability.extra.d_size)
       else
+        card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize{type='variable',key='a_handsize',vars={card.ability.extra.h_size}}})
         G.hand:change_size(card.ability.extra.h_size)
         G.GAME.round_resets.temp_handsize = (G.GAME.round_resets.temp_handsize or 0) + card.ability.extra.h_size
       end
@@ -103,9 +111,11 @@ local azurill ={
   config = {extra = {Xmult_minus = 0.75,rounds = 2,}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    info_queue[#info_queue+1] = {set = 'Other', key = 'baby'}
-    info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
-    info_queue[#info_queue+1] = G.P_CENTERS.c_heirophant
+    if pokermon_config.detailed_tooltips then
+      info_queue[#info_queue+1] = {set = 'Other', key = 'baby'}
+      info_queue[#info_queue+1] = {key = 'e_negative_consumable', set = 'Edition', config = {extra = 1}}
+      info_queue[#info_queue+1] = G.P_CENTERS.c_heirophant
+    end
     return {vars = {center.ability.extra.Xmult_minus, center.ability.extra.rounds, }}
   end,
   rarity = 2,
@@ -113,6 +123,7 @@ local azurill ={
   stage = "Baby",
   ptype = "Colorless",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
@@ -152,6 +163,7 @@ local nosepass={
   stage = "Basic",
   ptype = "Earth",
   atlas = "Pokedex3",
+  gen = 3,
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,

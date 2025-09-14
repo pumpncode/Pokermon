@@ -120,6 +120,7 @@ pokermon.family = {
     {"zigzagoon", "linoone"},
     {"shroomish", "breloom"},
     {"aron","lairon","aggron"},
+    {"kricketot", "kricketune"},
     {"buizel", "floatzel"},
     {"buneary", "lopunny", "mega_lopunny"},
     {"riolu", "lucario"},
@@ -145,6 +146,7 @@ pokermon.family = {
     {"yamper","boltund"},
     {"tarountula", "spidops"},
     {"fidough", "dachsbun"},
+    {"charcadet", "armarouge", "ceruledge"},
     {"tinkatink", "tinkatuff", "tinkaton"},
     {"wiglett", "wugtrio"},
     {"gimmighoul", "gholdengo", "gimmighoulr"},
@@ -326,6 +328,12 @@ poke_backend_evolve = function(card, to_key)
   if card.config.center == new_card then return end
   
   local old_key = card.config.center.key
+  
+  --turn off multisprite on evolution
+  if card.config.center.poke_multi_sprite and card.ability and card.ability.extra then
+    card.ability.extra.loaded_pos = nil
+    card.ability.extra.loaded_sprite = nil
+  end
   
   -- if it's not a mega and not a devolution and still has rounds left, reset perish tally
   if card.ability.perishable and card.config.center.rarity ~= "poke_mega" then

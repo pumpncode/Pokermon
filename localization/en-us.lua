@@ -1732,7 +1732,7 @@ return {
                 name = 'Electabuzz',      
                 text = {
                     "Gains {C:money}$#1#{} of {C:attention}sell value{} when a card",
-                    "is sold and at end of round",
+                    "is {C:attention}sold{} and at end of round",
                     "{br:3.5}ERROR - CONTACT STEAK",
                     "Earn {C:attention}#2#%{} of this Joker's sell value",
                     "at end of round {C:inactive}(rounded up){}",
@@ -3260,6 +3260,15 @@ return {
                   "scoring hand is {C:attention}mono-suit{}"
                 }
             },
+            j_poke_absol = {
+                name = "Absol",
+                text = {
+                  "{X:red,C:white}X#1#{} Mult",
+                  "All {C:attention}listed{} {C:green,E:1,S:1.1}probabilities{}", 
+                  "are always {C:attention}0{}",
+                  "{C:inactive}(ex: {C:green}1 in 6{C:inactive} -> {C:green}0 in 6{C:inactive})",
+                }
+            },
             j_poke_wynaut = {
                 name = 'Wynaut',
                 text = {
@@ -3385,6 +3394,26 @@ return {
                     "If {C:attention}first discard{} has exactly {C:attention}1{} card,",
                     "{C:attention}destroy{} it",
                 }
+            },
+            j_poke_kricketot = {
+              name = "Kricketot",
+              text = {
+                "Earn {C:money}$#1#{} if played hand is",
+                "exactly {C:attention}4{} cards and has",
+                "at least {C:attention}4{} different {C:attention}suits{}",
+                "{C:inactive,s:0.8}(Evolves after {C:attention,s:0.8}#2#{C:inactive,s:0.8} rounds)",
+              }
+            },
+            j_poke_kricketune = {
+              name = "Kricketune",
+              text = {
+                "Earn {C:money}$#1#{} if played hand is",
+                "exactly {C:attention}4{} cards and has",
+                "at least {C:attention}4{} different {C:attention}suits{}",
+                "{br:2}ERROR - CONTACT STEAK",
+                "{C:green}#2# in #3#{} chance to create",
+                "a {C:tarot}Tarot{} card as well"
+              }
             },
             j_poke_buizel = {
                 name = 'Buizel',
@@ -3562,8 +3591,8 @@ return {
             j_poke_electivire = {
                 name = 'Electivire',
                 text = {
-                    "Gains {C:money}$#1#{} of {C:attention}sell value{} at end of",
-                    "round and when a card is {C:attention}sold{}",
+                    "Gains {C:money}$#1#{} of {C:attention}sell value{} when a card",
+                    "is {C:attention}sold{} and at end of round",
                     "{br:3.5}ERROR - CONTACT STEAK",
                     "Gives {X:mult,C:white}X#2#{} Mult for each dollar",
                     "of sell value this Joker has",
@@ -4191,6 +4220,35 @@ return {
                   "{C:inactive}(Currently {C:chips}+#1#{C:inactive} Chips)",
                 }
             },
+            j_poke_charcadet = {
+              name = "Charcadet",
+              text = {
+                "Gains {C:mult}+#2#{} Mult after scoring",
+                "played hand",
+                "{C:inactive,s:0.8}(Resets at end of round)",
+                "{C:inactive,s:0.8}(Evolves with a {C:attention,s:0.8}Dawn Stone{C:inactive,s:0.8} or {C:attention,s:0.8}Dusk Stone{C:inactive,s:0.8})",
+                "{C:inactive}(Currently {C:mult}+#1#{C:inactive} Mult)",
+              }
+            },
+            j_poke_armarouge = {
+              name = "Armarouge",
+              text = {
+                "{X:mult,C:white} X#1# {} Mult",
+                "Loses {X:mult,C:white} X#2# {} Mult after scoring",
+                "played hand",
+                "{C:inactive,s:0.8}(Resets at end of round)",
+              }
+            },
+            j_poke_ceruledge = {
+              name = "Ceruledge",
+              text = {
+                "Gains {X:mult,C:white} X#2# {} Mult after scoring",
+                "played hand and drains {C:money}$#3#{}",
+                "from another random Joker",
+                "{C:inactive,s:0.8}(Resets at end of round)",
+                "{C:inactive}(Currently {X:mult,C:white} X#1# {C:inactive} Mult)",
+              }
+            },
             j_poke_tinkatink = {
                 name = "Tinkatink",
                 text = {
@@ -4409,7 +4467,7 @@ return {
             j_poke_professor = {
                 name = "Professor",
                 text = {
-                    "After {C:attention}#1#{} round, sell this card",
+                    "After {C:attention}#1#{} rounds, sell this card",
                     "to create a {C:attention}Starter{} tag",
                     "{C:inactive}(Currently {C:attention}#2#{C:inactive}/#1#){}"
                 }

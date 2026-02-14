@@ -16,10 +16,10 @@
 local dreepy={
   name = "dreepy",
   pos = {x = 11, y = 5},
-  config = {extra = {money = 1, straight_flush_played = 0, suit = "Spades"}},
+  config = {extra = {money = 1, straight_flush_played = 0}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    return {vars = {center.ability.extra.money, localize(center.ability.extra.suit, 'suits_plural')}}
+    return {vars = {center.ability.extra.money}}
   end,
   designer = "Lemmanade",
   rarity = 2,
@@ -41,11 +41,15 @@ local dreepy={
         end
       end
       if G.hand and G.hand.cards and #G.hand.cards > 0 then
-        juice_flip_hand(card)
-        for i=1, #G.hand.cards do
-          G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() G.hand.cards[i]:change_suit(card.ability.extra.suit);return true end }))
-        end 
-        juice_flip_hand(card, true)
+        local first_card = G.hand.cards[1]
+        if not SMODS.has_no_suit(first_card) then
+          local suit = first_card.base.suit
+          juice_flip_hand(card)
+          for i=1, #G.hand.cards do
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() G.hand.cards[i]:change_suit(suit);return true end }))
+          end 
+          juice_flip_hand(card, true)
+        end
       end
       return {
         message = localize('k_val_up'),
@@ -193,6 +197,7 @@ local dreepy_dart={
   atlas = "Pokedex8",
   gen = 8,
   aux_poke = true,
+  auto_sticker = true,
   perishable_compat = true,
   blueprint_compat = false,
   eternal_compat = true,
@@ -205,11 +210,15 @@ local dreepy_dart={
         end
       end
       if G.hand and G.hand.cards and #G.hand.cards > 0 then
-        juice_flip_hand(card)
-        for i=1, #G.hand.cards do
-          G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() G.hand.cards[i]:change_suit(card.ability.extra.suit);return true end }))
+        local first_card = G.hand.cards[1]
+        if not SMODS.has_no_suit(first_card) then
+          local suit = first_card.base.suit
+          juice_flip_hand(card)
+          for i=1, #G.hand.cards do
+            G.E_MANAGER:add_event(Event({trigger = 'after',delay = 0.1,func = function() G.hand.cards[i]:change_suit(suit);return true end }))
+          end 
+          juice_flip_hand(card, true)
         end
-        juice_flip_hand(card, true)
       end
     end
   end,
@@ -291,10 +300,18 @@ local wyrdeer={
     end
   end,
   add_to_deck = function(self, card, from_debuff)
-    G.GAME.scry_amount = (G.GAME.scry_amount or 0) + card.ability.extra.scry
+    if card.ability.extra.scry_added > 0 then
+      G.GAME.scry_amount = (G.GAME.scry_amount or 0) + card.ability.extra.scry + card.ability.extra.scry_added
+    else
+      G.GAME.scry_amount = (G.GAME.scry_amount or 0) + card.ability.extra.scry
+    end
   end,
   remove_from_deck = function(self, card, from_debuff)
-    G.GAME.scry_amount = math.max(0,(G.GAME.scry_amount or 0) - card.ability.extra.scry)
+    if card.ability.extra.scry_added > 0 then
+      G.GAME.scry_amount = math.max(0,(G.GAME.scry_amount or 0) - (card.ability.extra.scry + card.ability.extra.scry_added))
+    else
+      G.GAME.scry_amount = math.max(0,(G.GAME.scry_amount or 0) - card.ability.extra.scry)
+    end
   end,
 }
 -- Kleavor 900
@@ -327,40 +344,53 @@ local kleavor={
       juice_card_until(card, eval, true)
     end
     if context.setting_blind and not card.getting_sliced and not context.blueprint then
+      card.ability.extra.selected = true
       local my_pos = nil
       for i = 1, #G.jokers.cards do
-          if G.jokers.cards[i] == card then my_pos = i; break end
+        if G.jokers.cards[i] == card then my_pos = i; break end
       end
-      if my_pos and G.jokers.cards[my_pos+1] and not card.getting_sliced and not G.jokers.cards[my_pos+1].ability.eternal and not G.jokers.cards[my_pos+1].getting_sliced then 
-          local sliced_card = G.jokers.cards[my_pos+1]
-          sliced_card.getting_sliced = true
-          if (sliced_card.config.center.rarity ~= 1) then
-            local edition = poll_edition('aura', nil, true, true)
-            local _card = create_playing_card({
-                            front = pseudorandom_element(G.P_CARDS, pseudoseed('kleavor')), 
-                            center = G.P_CENTERS.m_stone}, G.deck, nil, nil, {G.C.SECONDARY_SET.Enhanced})
-            _card:set_edition(edition, true)
+      if my_pos and G.jokers.cards[my_pos+1] and not card.getting_sliced and not G.jokers.cards[my_pos+1].ability.eternal and not G.jokers.cards[my_pos+1].getting_sliced then
+        local sliced_card = G.jokers.cards[my_pos+1]
+        sliced_card.getting_sliced = true
+
+        if (sliced_card.config.center.rarity ~= 1) then
+          SMODS.add_card {
+            set = 'Enhanced',
+            key = 'm_stone',
+            area = G.deck,
+            edition = poll_edition('aura', nil, true, true),
+            key_append = 'kleavor',
+          }
+        end
+
+        G.GAME.joker_buffer = G.GAME.joker_buffer - 1
+        G.E_MANAGER:add_event(Event({
+          func = function()
+            G.GAME.joker_buffer = 0
+            SMODS.scale_card(card, {
+              ref_value = 'mult',
+              scalar_value = 'mult_mod',
+              no_message = true,
+            })
+            card:juice_up(0.8, 0.8)
+            sliced_card:start_dissolve({ HEX("57ecab") }, nil, 1.6)
+            play_sound('slice1', 0.96 + math.random() * 0.08)
+            return true
           end
-          
-          G.GAME.joker_buffer = G.GAME.joker_buffer - 1
-          G.E_MANAGER:add_event(Event({func = function()
-              G.GAME.joker_buffer = 0
-              card.ability.extra.mult = card.ability.extra.mult + card.ability.extra.mult_mod
-              card:juice_up(0.8, 0.8)
-              sliced_card:start_dissolve({HEX("57ecab")}, nil, 1.6)
-              play_sound('slice1', 0.96+math.random()*0.08)
-          return true end }))
-          card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize{type = 'variable', key = 'a_mult', vars = {card.ability.extra.mult}}, colour = G.C.RED, no_juice = true})
-      end
-      card.ability.extra.selected = true
-    end
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.joker_main then
+        }))
+
         return {
-            message = localize{type = 'variable', key = 'a_mult', vars = {card.ability.extra.mult}}, 
-            mult_mod = card.ability.extra.mult
+          message = localize{type = 'variable', key = 'a_mult',
+          vars = { card.ability.extra.mult }},
+          colour = G.C.RED,
+          no_juice = true
         }
       end
+    end
+    if context.joker_main then
+      return {
+        mult = card.ability.extra.mult
+      }
     end
   end
 }

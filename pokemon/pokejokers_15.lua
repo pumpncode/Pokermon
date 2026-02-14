@@ -187,7 +187,7 @@ local mismagius = {
   ptype = "Psychic",
   atlas = "Pokedex4",
   gen = 4,
-  perishable_compat = true,
+  perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
@@ -404,11 +404,12 @@ local happiny={
         max = max + 1
       end
       for i = 1, max do
-        local _card = create_card('Tarot', G.consumeables, nil, nil, nil, nil, 'c_magician')
-        local edition = {negative = true}
-        _card:set_edition(edition, true)
-        _card:add_to_deck()
-        G.consumeables:emplace(_card)
+          G.E_MANAGER:add_event(Event({
+            func = function()
+              SMODS.add_card{set = 'Tarot', key = 'c_magician', edition = 'e_negative'}
+              return true
+            end
+          }))
       end
     end
     return level_evo(self, card, context, "j_poke_chansey")
@@ -454,11 +455,12 @@ local munchlax={
       end
     end
     if context.end_of_round and not context.individual and not context.repetition and not card.debuff then
-      local _card = create_card('Item', G.consumeables, nil, nil, nil, nil, nil)
-      local edition = {negative = true}
-      _card:set_edition(edition, true)
-      _card:add_to_deck()
-      G.consumeables:emplace(_card)
+      G.E_MANAGER:add_event(Event({
+        func = function()
+          SMODS.add_card{set = 'Item', edition = 'e_negative'}
+          return true
+        end
+      }))
     end
     return level_evo(self, card, context, "j_poke_snorlax")
   end,
@@ -468,16 +470,6 @@ local riolu={
   name = "riolu",
   pos = {x = 4, y = 4},
   config = {extra = {Xmult_minus = 0.9,rounds = 2,}},
-  loc_txt = {
-    name = "Riolu",
-    text = {
-      "{C:attention}Baby{}, {X:mult,C:white} X#1# {} Mult",
-      "Creates a copy of {C:attention}Aura{}",
-      "at end of round",
-      "{C:inactive}(Must have room)",
-      "{C:inactive,s:0.8}(Evolves after {C:attention,s:0.8}#2#{C:inactive,s:0.8} rounds)",
-    }
-  },
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     info_queue[#info_queue+1] = {set = 'Other', key = 'baby'}
@@ -508,9 +500,14 @@ local riolu={
     end
     if context.end_of_round and not context.individual and not context.repetition and not card.debuff then
       if #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
-        local _card = create_card('Spectral', G.consumeables, nil, nil, nil, nil, 'c_aura')
-        _card:add_to_deck()
-        G.consumeables:emplace(_card)
+        G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
+        G.E_MANAGER:add_event(Event({
+          func = function()
+            SMODS.add_card{set = 'Spectral', key = 'c_aura'}
+            G.GAME.consumeable_buffer = 0
+            return true
+          end
+        }))
       end
     end
     return level_evo(self, card, context, "j_poke_lucario")
@@ -521,14 +518,6 @@ local lucario={
   name = "lucario",
   pos = {x = 5, y = 4},
   config = {extra = {Xmult_multi = 1.3,}},
-  loc_txt = {
-    name = "Lucario",
-    text = {
-       "Each {C:attention}editioned{} card",
-       "{C:attention}held{} in hand",
-       "gives {X:mult,C:white} X#1# {} Mult",
-    }
-  },
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     return {vars = {center.ability.extra.Xmult_multi, }}

@@ -15,7 +15,7 @@ local charcadet={
     end
     return {vars = {center.ability.extra.mult, center.ability.extra.mult_mod, }}
   end,
-  rarity = 1,
+  rarity = 2,
   cost = 5,
   gen = 9,
   item_req = {"dawnstone", "duskstone"},
@@ -27,25 +27,24 @@ local charcadet={
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.joker_main then
-        return {
-          message = localize{type = 'variable', key = 'a_mult', vars = {card.ability.extra.mult}}, 
-          colour = G.C.MULT,
-          mult_mod = card.ability.extra.mult
-        }
-      end
-      if context.after and not context.blueprint then
-        card.ability.extra.mult = card.ability.extra.mult + card.ability.extra.mult_mod
-        return {
-          message = localize('k_upgrade_ex'),
-          colour = G.C.MULT
-        }
-      end
+    if context.joker_main then
+      return {
+        mult = card.ability.extra.mult
+      }
+    end
+    if context.after and not context.blueprint then
+      SMODS.scale_card(card, {
+        ref_value = 'mult',
+        scalar_value = 'mult_mod',
+        message_colour = G.C.MULT
+      })
     end
     if not context.repetition and not context.individual and context.end_of_round and not context.blueprint then
       card.ability.extra.mult = card.ability.extra.mult_original
-      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_reset'), colour = G.C.RED})
+      return {
+        message = localize('k_reset'),
+        colour = G.C.RED
+      }
     end
     return item_evo(self, card, context)
   end,
@@ -54,10 +53,10 @@ local charcadet={
 local armarouge={
   name = "armarouge",
   pos = {x = 0, y = 0},
-  config = {extra = {Xmult = 3, Xmult_minus = 1, Xmult2 = 3}},
+  config = {extra = {Xmult = 3, Xmult_mod = 1, Xmult2 = 3}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
-    return {vars = {center.ability.extra.Xmult, center.ability.extra.Xmult_minus, }}
+    return {vars = {center.ability.extra.Xmult, center.ability.extra.Xmult_mod, }}
   end,
   rarity = "poke_safari",
   cost = 7,
@@ -69,29 +68,21 @@ local armarouge={
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.joker_main and card.ability.extra.Xmult > 1 then
-        return {
-          message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.Xmult}}, 
-          colour = G.C.XMULT,
-          Xmult_mod = card.ability.extra.Xmult
-        }
-      end
-      if context.after and not context.blueprint then
-        local starting_Xmult = card.ability.extra.Xmult
-        if card.ability.extra.Xmult >= 2 then
-          card.ability.extra.Xmult = card.ability.extra.Xmult - card.ability.extra.Xmult_minus
-        else
-          card.ability.extra.Xmult = 1
-        end
-        if card.ability.extra.Xmult ~= starting_Xmult then 
-          return {
-            message = localize{type='variable',key='a_xmult_minus',vars={card.ability.extra.Xmult_minus}},
-            colour = G.C.RED,
-            card = card
-          }
-        end
-      end
+    if context.joker_main then
+      return {
+        Xmult = card.ability.extra.Xmult
+      }
+    end
+    if context.after and card.ability.extra.Xmult > 1 and not context.blueprint then
+      SMODS.scale_card(card, {
+        ref_value = 'Xmult',
+        scalar_value = 'Xmult_mod',
+        operation = function(ref_table, ref_value, initial, modifier)
+          ref_table[ref_value] = math.max(1, initial - modifier)
+        end,
+        message_key = 'a_xmult_minus',
+        message_colour = G.C.RED
+      })
     end
     if not context.repetition and not context.individual and context.end_of_round and not context.blueprint then
       card.ability.extra.Xmult = card.ability.extra.Xmult2
@@ -117,42 +108,39 @@ local ceruledge={
   rarity = "poke_safari",
   cost = 7,
   gen = 9,
-  stage = "Basic",
+  stage = "One",
   ptype = "Fire",
   atlas = "Pokedex9",
   perishable_compat = true,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.joker_main and card.ability.extra.Xmult > 1 then
-        return {
-          message = localize{type = 'variable', key = 'a_xmult', vars = {card.ability.extra.Xmult}}, 
-          colour = G.C.XMULT,
-          Xmult_mod = card.ability.extra.Xmult
-        }
-      end
-      if context.after and not context.blueprint then
-        card.ability.extra.Xmult = card.ability.extra.Xmult + card.ability.extra.Xmult_mod
-        G.E_MANAGER:add_event(Event({
-          func = function()
-              local drain_jokers = {}
-              for i = 1, #G.jokers.cards do
-                if G.jokers.cards[i] ~= card and G.jokers.cards[i].sell_cost > 1 then
-                  drain_jokers[#drain_jokers + 1] = G.jokers.cards[i]
-                end
-              end
-              if #drain_jokers > 0 then
-                poke_drain(card, pseudorandom_element(drain_jokers, 'ceruledge'), card.ability.extra.money_minus)
-              end
-              return true
+    if context.joker_main then
+      return {
+        Xmult = card.ability.extra.Xmult
+      }
+    end
+    if context.after and not context.blueprint then
+      G.E_MANAGER:add_event(Event({
+        func = function()
+          local drain_jokers = {}
+          for i = 1, #G.jokers.cards do
+            if G.jokers.cards[i] ~= card and G.jokers.cards[i].sell_cost > 1 then
+              drain_jokers[#drain_jokers+1] = G.jokers.cards[i]
+            end
           end
-        })) 
-        return {
-          message = localize('k_upgrade_ex'),
-          colour = G.C.MULT
-        }
-      end
+          if #drain_jokers > 0 then
+            poke_drain(card, pseudorandom_element(drain_jokers, 'ceruledge'), card.ability.extra.money_minus)
+          end
+          return true
+        end
+      }))
+
+      SMODS.scale_card(card, {
+        ref_value = 'Xmult',
+        scalar_value = 'Xmult_mod',
+        message_colour = G.C.MULT
+      })
     end
     if not context.repetition and not context.individual and context.end_of_round and not context.blueprint then
       card.ability.extra.Xmult = card.ability.extra.Xmult2
@@ -172,7 +160,105 @@ local ceruledge={
 -- Shroodle 944
 -- Grafaiai 945
 -- Bramblin 946
+local bramblin={
+  name = "bramblin",
+  pos = {x = 0, y = 0},
+  config = {extra = {cards_drawn = 0, seed_added = 0, rank_scored = 0}, evo_rqmt = 160},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    info_queue[#info_queue+1] = G.P_CENTERS.m_poke_seed
+    return {vars = {localize(G.GAME.current_round.bramblincard and G.GAME.current_round.bramblincard.rank or "Ace", 'ranks'), math.max(0, self.config.evo_rqmt - center.ability.extra.cards_drawn)}}
+  end,
+  rarity = 1,
+  cost = 6,
+  gen = 9,
+  stage = "Basic",
+  ptype = "Grass",
+  atlas = "Pokedex9",
+  perishable_compat = true,
+  blueprint_compat = false,
+  eternal_compat = false,
+  calculate = function(self, card, context)
+    if context.hand_drawn and SMODS.drawn_cards and not context.blueprint then
+      card.ability.extra.cards_drawn = card.ability.extra.cards_drawn + #SMODS.drawn_cards
+    end
+    if context.before and not context.blueprint and card.ability.extra.seed_added <= 0 then
+      for i = 1, #context.scoring_hand do
+        if context.scoring_hand[i]:get_id() == G.GAME.current_round.bramblincard.id then
+          card.ability.extra.rank_scored = card.ability.extra.rank_scored + 1
+          if card.ability.extra.rank_scored == 2 then
+            context.scoring_hand[i]:set_ability(G.P_CENTERS.m_poke_seed, nil, true)
+            G.E_MANAGER:add_event(Event({
+              func = function()
+                context.scoring_hand[i]:juice_up()
+                return true
+              end
+            }))
+            card.ability.extra.seed_added = card.ability.extra.seed_added + 1
+            break
+          end
+        end
+      end
+    end
+    if context.end_of_round and not context.individual and not context.repetition and not context.blueprint then
+      card.ability.extra.rank_scored = 0
+      card.ability.extra.seed_added = 0
+    end
+    return scaling_evo(self, card, context, "j_poke_brambleghast", card.ability.extra.cards_drawn, self.config.evo_rqmt)
+  end,
+}
 -- Brambleghast 947
+local brambleghast={
+  name = "brambleghast",
+  pos = {x = 0, y = 0},
+  config = {extra = {chip_mod = 2, seed_added = 0, rank_scored = 0}},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    info_queue[#info_queue+1] = G.P_CENTERS.m_poke_seed
+    return {vars = {center.ability.extra.chip_mod, center.ability.extra.chip_mod * math.max(0, (G.GAME.dollars or 0) + (G.GAME.dollar_buffer or 0)),
+        localize(G.GAME.current_round.bramblincard and G.GAME.current_round.bramblincard.rank or "Ace", 'ranks')}}
+  end,
+  rarity = "poke_safari",
+  cost = 8,
+  gen = 9,
+  stage = "One",
+  ptype = "Grass",
+  atlas = "Pokedex9",
+  perishable_compat = true,
+  blueprint_compat = true,
+  eternal_compat = true,
+  calculate = function(self, card, context)
+    if context.joker_main then
+      local dollars = (SMODS.Mods["Talisman"] or {}).can_load and to_number(G.GAME.dollars) or G.GAME.dollars
+      return {
+          chips = card.ability.extra.chip_mod * math.max(0, (dollars + (G.GAME.dollar_buffer or 0)))
+      }
+    end
+    if context.before and not context.blueprint and card.ability.extra.seed_added <= 0 then
+      for i = 1, #context.scoring_hand do
+        if context.scoring_hand[i]:get_id() == G.GAME.current_round.bramblincard.id then
+          card.ability.extra.rank_scored = card.ability.extra.rank_scored + 1
+          if card.ability.extra.rank_scored == 2 then
+            context.scoring_hand[i]:set_ability(G.P_CENTERS.m_poke_seed, nil, true)
+            context.scoring_hand[i].ability.extra.level = 2
+            G.E_MANAGER:add_event(Event({
+              func = function()
+                context.scoring_hand[i]:juice_up()
+                return true
+              end
+            }))
+            card.ability.extra.seed_added = card.ability.extra.seed_added + 1
+            break
+          end
+        end
+      end
+    end
+    if context.end_of_round and not context.individual and not context.repetition and not context.blueprint then
+      card.ability.extra.rank_scored = 0
+      card.ability.extra.seed_added = 0
+    end
+  end,
+}
 -- Toedscool 948
 -- Toedscruel 949
 -- Klawf 950
@@ -206,7 +292,7 @@ local tinkatink={
   calculate = function(self, card, context)
     if context.setting_blind then
       local add = function(v) return not SMODS.has_enhancement(v, 'm_steel') end
-      local modify = function(v) SMODS.debuff_card(v, true, card); end
+      local modify = function(v) SMODS.debuff_card(v, true, 'tinkatink'..card.unique_val); end
       local args = {array = G.playing_cards, amt = card.ability.extra.cards_debuffed, seed = 'tinkatink', add_con = add, mod_func = modify}
       pseudorandom_multi(args)
     end
@@ -218,7 +304,7 @@ local tinkatink={
     end
     if context.end_of_round and not context.individual and not context.repetition then
       for k, v in pairs(G.playing_cards) do
-        SMODS.debuff_card(v,'reset', card)
+        SMODS.debuff_card(v,false, 'tinkatink'..card.unique_val)
       end
     end
     return level_evo(self, card, context, "j_poke_tinkatuff")
@@ -226,7 +312,7 @@ local tinkatink={
   remove_from_deck = function(self, card, from_debuff)
     if not from_debuff or (from_debuff and card.ability.perishable and card.ability.perish_tally == 0) then
       for k, v in pairs(G.playing_cards) do
-        SMODS.debuff_card(v,'reset', card)
+        SMODS.debuff_card(v,false, 'tinkatink'..card.unique_val)
       end
     end
   end
@@ -255,7 +341,7 @@ local tinkatuff={
   calculate = function(self, card, context)
     if context.setting_blind then
       local add = function(v) return not SMODS.has_enhancement(v, 'm_steel') end
-      local modify = function(v) SMODS.debuff_card(v, true, card) end
+      local modify = function(v) SMODS.debuff_card(v, true, 'tinkatuff'..card.unique_val) end
       local args = {array = G.playing_cards, amt = card.ability.extra.cards_debuffed, seed = 'tinkatuff', add_con = add, mod_func = modify}
       pseudorandom_multi(args)
     end
@@ -267,7 +353,7 @@ local tinkatuff={
     end
     if context.end_of_round and not context.individual and not context.repetition then
       for k, v in pairs(G.playing_cards) do
-        SMODS.debuff_card(v,'reset', card)
+        SMODS.debuff_card(v,false, 'tinkatuff'..card.unique_val)
       end
     end
     return level_evo(self, card, context, "j_poke_tinkaton")
@@ -275,7 +361,7 @@ local tinkatuff={
   remove_from_deck = function(self, card, from_debuff)
     if not from_debuff or (from_debuff and card.ability.perishable and card.ability.perish_tally == 0) then
       for k, v in pairs(G.playing_cards) do
-        SMODS.debuff_card(v,'reset', card)
+        SMODS.debuff_card(v,false, 'tinkatuff'..card.unique_val)
       end
     end
   end
@@ -305,7 +391,7 @@ local tinkaton={
   calculate = function(self, card, context)
     if context.setting_blind then
       local add = function(v) return not SMODS.has_enhancement(v, 'm_steel') end
-      local modify = function(v) SMODS.debuff_card(v, true, card) end
+      local modify = function(v) SMODS.debuff_card(v, true, 'tinkaton'..card.unique_val) end
       local args = {array = G.playing_cards, amt = card.ability.extra.cards_debuffed, seed = 'tinkaton', add_con = add, mod_func = modify}
       pseudorandom_multi(args)
     end
@@ -316,20 +402,20 @@ local tinkaton={
       }
     end
     if context.check_enhancement then
-      if context.other_card.config.center.key == "m_steel" then
+      if SMODS.has_enhancement(context.other_card, 'm_steel') then
           return {m_glass = true}
       end
     end
     if context.end_of_round and not context.individual and not context.repetition then
       for k, v in pairs(G.playing_cards) do
-        SMODS.debuff_card(v,'reset', card)
+        SMODS.debuff_card(v,false, 'tinkaton'..card.unique_val)
       end
     end
   end,
   remove_from_deck = function(self, card, from_debuff)
     if not from_debuff or (from_debuff and card.ability.perishable and card.ability.perish_tally == 0) then
       for k, v in pairs(G.playing_cards) do
-        SMODS.debuff_card(v,'reset', card)
+        SMODS.debuff_card(v,false, 'tinkaton'..card.unique_val)
       end
     end
   end
@@ -391,5 +477,5 @@ local wiglett={
   end
 }
 return {name = "Pokemon Jokers 931-960", 
-        list = {charcadet, armarouge, ceruledge, tinkatink, tinkatuff, tinkaton, wiglett},
+        list = {charcadet, armarouge, ceruledge, bramblin, brambleghast, tinkatink, tinkatuff, tinkaton, wiglett},
 }

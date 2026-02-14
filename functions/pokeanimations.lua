@@ -5,6 +5,7 @@ AnimatedPokemon = {
    j_poke_unown_swarm = {native = true, frames_per_row = 12, frames = 36, fps = 12, soul = true, size = {x = 290, y = 285} },
    j_poke_voltorb = {shiny_offset = 1, frames_per_row = 11, frames = 11, fps = 11, },
    j_poke_electrode = {shiny_offset = 1, frames_per_row = 13, frames = 13, fps = 13, },
+   c_poke_bird_energy = {frames_per_row = 18, frames = 36, fps = 15, }
 }
 AnimatedSingles = {}
 
@@ -16,13 +17,13 @@ for k, tbl in pairs(AnimatedPokemon) do
          path = k .. ".png",
          px = tbl.size and tbl.size.x or 71,
          py = tbl.size and tbl.size.y or 95,
-      }):register()
+      })
       SMODS.Atlas({
          key = k .. "_shiny",
          path = k .. "_shiny.png",
          px = tbl.size and tbl.size.x or 71,
          py = tbl.size and tbl.size.y or 95,
-      }):register()
+      })
    end
    if tbl.soul and not tbl.soul_atlas then
       tbl.soul_atlas = true
@@ -31,13 +32,13 @@ for k, tbl in pairs(AnimatedPokemon) do
          path = k .. "_soul.png",
          px = tbl.soul_size and tbl.soul_size.x or tbl.size and tbl.size.x or 71,
          py = tbl.soul_size and tbl.soul_size.y or tbl.size and tbl.size.y or 95,
-      }):register()
+      })
       SMODS.Atlas({
          key = k .. "_shiny_soul",
          path = k .. "_shiny_soul.png",
          px = tbl.soul_size and tbl.soul_size.x or tbl.size and tbl.size.x or 71,
          py = tbl.soul_size and tbl.soul_size.y or tbl.size and tbl.size.y or 95,
-      }):register()
+      })
    end
 end
 

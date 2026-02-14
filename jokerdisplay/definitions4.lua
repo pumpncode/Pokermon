@@ -16,7 +16,73 @@ local jd_def = JokerDisplay.Definitions
 --	Bidoof
 --	Bibarel
 --	Kricketot
+jd_def["j_poke_kricketot"] = {
+  text = {
+    { text = "+$", colour = G.C.GOLD },
+    { ref_table = "card.joker_display_values", ref_value = "money", retrigger_type = "mult", colour = G.C.GOLD }
+  },
+  calc_function = function(card)
+    local money = 0
+    local suits = 0
+    local hand = JokerDisplay.current_hand
+    if #hand == 4 then
+      for k, v in pairs(SMODS.Suits) do
+        for x, y in pairs(hand) do
+          if y:is_suit(v.key) then
+            suits = suits + 1
+            break
+          end
+        end
+      end
+      if suits >= 4 then
+        money = card.ability.extra.money
+      end
+    end
+    card.joker_display_values.money = money
+  end,
+}
+
 --	Kricketune
+jd_def["j_poke_kricketune"] = {
+  text = {
+    { text = "+$", colour = G.C.GOLD },
+    { ref_table = "card.joker_display_values", ref_value = "money", retrigger_type = "mult", colour = G.C.GOLD },
+    { text = " +", colour = G.C.SECONDARY_SET.Tarot },
+    { ref_table = "card.joker_display_values", ref_value = "count", retrigger_type = "mult", colour = G.C.SECONDARY_SET.Tarot },
+  },
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'kricketune')
+    local money = 0
+    local count = 0
+    local suits = 0
+    local hand = JokerDisplay.current_hand
+    if #hand == 4 then
+      for k, v in pairs(SMODS.Suits) do
+        for x, y in pairs(hand) do
+          if y:is_suit(v.key) then
+            suits = suits + 1
+            break
+          end
+        end
+      end
+      if suits >= 4 then
+        money = card.ability.extra.money
+        count = 1
+      end
+    end
+    card.joker_display_values.money = money
+    card.joker_display_values.count = count
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
 --	Shinx
 --	Luxio
 --	Luxray
@@ -185,9 +251,9 @@ jd_def["j_poke_mismagius"] = {
   text_config = { colour = G.C.CHIPS },
   extra = {
     {
-      { text = "(" },
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
       { ref_table = "card.joker_display_values", ref_value = "odds",colour = G.C.GREEN, scale = 0.3 },
-      { text = ")" },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
     },
   },
   calc_function = function(card)
@@ -294,6 +360,29 @@ jd_def["j_poke_riolu"] = {
 }
 
 --	Lucario
+jd_def["j_poke_lucario"] = {
+  text = {
+    {
+      border_nodes = {
+        { text = "X" },
+        { ref_table = "card.joker_display_values", ref_value = "Xmult", retrigger_type = "exp" },
+      },
+    },
+  },
+  calc_function = function(card)
+    local playing_hand = next(G.play.cards)
+    local count = 0
+      for i, playing_card in ipairs(G.hand.cards) do
+        if playing_hand or not playing_card.highlighted then
+        if not (playing_card.facing == 'back') and not playing_card.debuff and playing_card.edition then
+          count = count + JokerDisplay.calculate_card_triggers(playing_card, nil, true)
+        end
+      end
+    end
+    card.joker_display_values.Xmult = (card.ability.extra.Xmult_multi^count)
+  end
+}
+
 --	Hippopotas
 --	Hippowdon
 --	Skorupi
@@ -555,8 +644,8 @@ calc_function = function(card)
             end
         end
     end
-    card.joker_display_values.chips = count * card.ability.extra.chips
-    card.joker_display_values.mult = count * card.ability.extra.mult
+    card.joker_display_values.chips = count * card.ability.extra.chip_mod
+    card.joker_display_values.mult = count * card.ability.extra.mult_mod
     local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'yanmega')
     card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem } }
     card.joker_display_values.localized_text = "(3,6)"
@@ -730,6 +819,22 @@ jd_def["j_poke_probopass"] = {
 }
 
 --	Dusknoir
+jd_def["j_poke_dusknoir"] = {
+  reminder_text = {
+    { text = "(" },
+    { ref_table = "card.joker_display_values", ref_value = "active" },
+    { text = ")" },
+  },
+  calc_function = function(card)
+    local hand = JokerDisplay.current_hand
+    card.joker_display_values.active = G.GAME and G.GAME.current_round.hands_left <= 1 and localize("jdis_active") or localize("jdis_inactive")
+  end,
+  retrigger_function = function(playing_card, scoring_hand, held_in_hand, joker_card)
+    if held_in_hand then return 0 end
+    return G.GAME and G.GAME.current_round.hands_left <= 1 and joker_card.ability.extra.retriggers * JokerDisplay.calculate_joker_triggers(joker_card) or 0
+  end
+}
+
 --	Froslass
 jd_def["j_poke_froslass"] = {
   text = {
@@ -746,6 +851,109 @@ jd_def["j_poke_froslass"] = {
 }
 
 --	Rotom
+jd_def["j_poke_rotom"] = {
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'rotom')
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
+--	Rotom Heat
+jd_def["j_poke_rotomh"] = {
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'rotomh')
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
+--	Rotom Wash
+jd_def["j_poke_rotomw"] = {
+  text = {
+    { text = "+$", colour = G.C.GOLD },
+    { ref_table = "card.joker_display_values", ref_value = "money", retrigger_type = "mult", colour = G.C.GOLD }
+  },
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'rotomw')
+    local enhanced_card_count = 0
+    local text, _, scoring_hand = JokerDisplay.evaluate_hand()
+    if text ~= "Unknown" then
+      for _, scoring_card in pairs(scoring_hand) do
+        if scoring_card.config.center ~= G.P_CENTERS.c_base and not scoring_card.debuff then
+          enhanced_card_count = enhanced_card_count + 1
+        end
+      end
+    end
+    card.joker_display_values.money = enhanced_card_count * card.ability.extra.money 
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
+--	Rotom Frost
+jd_def["j_poke_rotomf"] = {
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'rotomf')
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
+--	Rotom Fan
+jd_def["j_poke_rotomfan"] = {
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'rotomfan')
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
+--	Rotom Mow
+jd_def["j_poke_rotomm"] = {
+  extra = {
+    {
+      { text = "(", colour = G.C.GREEN, scale = 0.3 },
+      { ref_table = "card.joker_display_values", ref_value = "odds", colour = G.C.GREEN, scale = 0.3 },
+      { text = ")", colour = G.C.GREEN, scale = 0.3 },
+    },
+  },
+  calc_function = function(card)
+    local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'rotomm')
+    card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem }}
+  end,
+}
+
 --	Uxie
 --	Mesprit
 --	Azelf

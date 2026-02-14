@@ -328,16 +328,16 @@ local chandelure={
 local golett={
   name = "golett",
   pos = {x = 2, y = 9},
-  config = {extra = {hazards = 4, Xmult_multi = 1.2, rounds = 5, num = 1, dem = 4}},
+  config = {extra = {hazard_level = 1, Xmult_multi = 1.2, rounds = 5, num = 1, dem = 4}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     -- just to shorten function
     local abbr = center.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'hazard_level', vars = poke_get_hazard_level_vars()}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
     
     local num, dem = SMODS.get_probability_vars(center, center.ability.extra.num, center.ability.extra.dem, 'golett')
-    return {vars = {abbr.hazards, abbr.Xmult_multi, abbr.rounds, num, dem}}
+    return {vars = {abbr.hazard_level, abbr.Xmult_multi, abbr.rounds, num, dem}}
   end,
   rarity = 3,
   cost = 7,
@@ -350,9 +350,6 @@ local golett={
   eternal_compat = true,
   hazard_poke = true,
   calculate = function(self, card, context)
-    if context.setting_blind then
-      poke_set_hazards(card.ability.extra.hazards)
-    end
     if context.individual and not context.end_of_round and context.cardarea == G.hand then
       if SMODS.has_enhancement(context.other_card, "m_poke_hazard") or SMODS.pseudorandom_probability(card, 'golett', card.ability.extra.num, card.ability.extra.dem, 'golett') then
         if context.other_card.debuff then
@@ -371,21 +368,27 @@ local golett={
     end
     return level_evo(self, card, context, "j_poke_golurk")
   end,
+  add_to_deck = function(self, card, from_debuff)
+    poke_change_hazard_level(card.ability.extra.hazard_level)
+  end,
+  remove_from_deck = function(self, card, from_debuff)
+    poke_change_hazard_level(-card.ability.extra.hazard_level)
+  end
 }
 -- Golurk 623
 local golurk={
   name = "golurk",
   pos = {x = 3, y = 9},
-  config = {extra = {hazards = 4, interval = 3, Xmult_multi = 1.4, num = 1, dem = 3}},
+  config = {extra = {hazard_level = 1, interval = 3, Xmult_multi = 1.3, num = 1, dem = 3}},
   loc_vars = function(self, info_queue, center)
     type_tooltip(self, info_queue, center)
     -- just to shorten function
     local abbr = center.ability.extra
-    info_queue[#info_queue+1] = {set = 'Other', key = 'poke_hazards', vars = {abbr.hazards}}
+    info_queue[#info_queue+1] = {set = 'Other', key = 'hazard_level', vars = poke_get_hazard_level_vars()}
     info_queue[#info_queue+1] = G.P_CENTERS.m_poke_hazard
     
     local num, dem = SMODS.get_probability_vars(center, center.ability.extra.num, center.ability.extra.dem, 'golurk')
-    return {vars = {abbr.hazards, abbr.Xmult_multi, num, dem}}
+    return {vars = {abbr.hazard_level, abbr.Xmult_multi, num, dem}}
   end,
   rarity = "poke_safari",
   cost = 7,
@@ -398,9 +401,6 @@ local golurk={
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.setting_blind then
-      poke_set_hazards(card.ability.extra.hazards)
-    end
     if context.individual and not context.end_of_round and context.cardarea == G.hand then
       if SMODS.has_enhancement(context.other_card, "m_poke_hazard") or SMODS.pseudorandom_probability(card, 'golurk', card.ability.extra.num, card.ability.extra.dem, 'golurk') then
         if context.other_card.debuff then
@@ -418,14 +418,130 @@ local golurk={
       end
     end
   end,
+  add_to_deck = function(self, card, from_debuff)
+    poke_change_hazard_level(card.ability.extra.hazard_level)
+  end,
+  remove_from_deck = function(self, card, from_debuff)
+    poke_change_hazard_level(-card.ability.extra.hazard_level)
+  end
 }
 -- Pawniard 624
+local pawniard={
+  name = "pawniard",
+  pos = {x = 0, y = 0},
+  config = {extra = {Xmult = 1,Xmult_mod = 0.25,}, evo_rqmt = 2},
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    return {vars = {center.ability.extra.Xmult, center.ability.extra.Xmult_mod, self.config.evo_rqmt}}
+  end,
+  rarity = 3,
+  cost = 7,
+  gen = 5,
+  stage = "Basic",
+  ptype = "Metal",
+  atlas = "Pokedex5",
+  perishable_compat = false,
+  blueprint_compat = true,
+  eternal_compat = true,
+  calculate = function(self, card, context)
+    if context.remove_playing_cards and not context.blueprint then
+      local face_cards = 0
+      for _, removed_card in ipairs(context.removed) do
+        if removed_card:is_face() then face_cards = face_cards + 1 end
+      end
+      if face_cards > 0 then
+        SMODS.scale_card(card, {
+          ref_value = 'Xmult',
+          scalar_value = 'Xmult_mod',
+          operation = function(ref_table, ref_value, initial, modifier)
+            ref_table[ref_value] = initial + modifier * face_cards
+          end,
+          message_key = 'a_xmult',
+          message_colour = G.C.XMULT
+        })
+      end
+    end
+    if context.joker_main then
+      return {
+        Xmult = card.ability.extra.Xmult
+      }
+    end
+    return scaling_evo(self, card, context, "j_poke_bisharp", card.ability.extra.Xmult, self.config.evo_rqmt)
+  end,
+}
 -- Bisharp 625
+local bisharp={
+  name = "bisharp",
+  pos = {x = 0, y = 0},
+  config = {extra = {Xmult = 1,Xmult_mod = 0.25,kings_destroyed = 0}, evo_rqmt = 3},
+  loc_txt = {
+    name = "Bisharp",
+    text = {
+      "Gains {X:red,C:white}X#2#{} Mult when a",
+      "{C:attention}face{} card is destroyed",
+      "{br:2}ERROR - CONTACT STEAK",
+      "If first played hand is a",
+      "single {C:attention}face{} card, destroy it",
+      "{C:inactive}(Currently {X:mult,C:white}X#1#{C:inactive} Mult)",
+      "{C:inactive,s:0.8}(Evolves after destroying {C:attention,s:0.8}#3#{C:inactive,s:0.8} Kings)",
+    }
+  },
+  loc_vars = function(self, info_queue, center)
+    type_tooltip(self, info_queue, center)
+    return {vars = {center.ability.extra.Xmult, center.ability.extra.Xmult_mod, math.max(0, self.config.evo_rqmt - center.ability.extra.kings_destroyed)}}
+  end,
+  rarity = "poke_safari",
+  cost = 9,
+  gen = 5,
+  stage = "One",
+  ptype = "Metal",
+  atlas = "Pokedex5",
+  perishable_compat = false,
+  blueprint_compat = true,
+  eternal_compat = true,
+  calculate = function(self, card, context)
+    if context.first_hand_drawn then
+      local eval = function() return G.GAME.current_round.hands_played == 0 end
+      juice_card_until(card, eval, true)
+    end
+    if context.remove_playing_cards and not context.blueprint then
+      local face_cards = 0
+      for _, removed_card in ipairs(context.removed) do
+        if removed_card:is_face() then face_cards = face_cards + 1 end
+        if removed_card:get_id() == 13 then card.ability.extra.kings_destroyed = card.ability.extra.kings_destroyed + 1 end
+      end
+      if face_cards > 0 then
+        SMODS.scale_card(card, {
+          ref_value = 'Xmult',
+          scalar_value = 'Xmult_mod',
+          operation = function(ref_table, ref_value, initial, modifier)
+            ref_table[ref_value] = initial + modifier * face_cards
+          end,
+          message_key = 'a_xmult',
+          message_colour = G.C.XMULT
+        })
+      end
+    end
+    if context.joker_main then
+      return {
+        Xmult = card.ability.extra.Xmult
+      }
+    end
+    if context.destroy_card and #context.full_hand == 1 and context.destroy_card == context.full_hand[1] and context.full_hand[1]:is_face()
+        and G.GAME.current_round.hands_played == 0 and not context.blueprint then
+      card:juice_up()
+      return {
+        remove = true
+      }
+    end
+    return scaling_evo(self, card, context, "j_poke_kingambit", card.ability.extra.kings_destroyed, self.config.evo_rqmt)
+  end,
+}
 -- Bouffalant 626
 -- Rufflet 627
 -- Braviary 628
 -- Vullaby 629
 -- Mandibuzz 630
 return {name = "Pokemon Jokers 601-630", 
-        list = {elgyem, beheeyem, litwick, lampent, chandelure, golett, golurk},
+        list = {elgyem, beheeyem, litwick, lampent, chandelure, golett, golurk, pawniard, bisharp},
 }

@@ -41,30 +41,31 @@ local trubbish={
   stage = "Basic",
   ptype = "Dark",
   atlas = "Pokedex5",
-  perishable_compat = true,
+  perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.joker_main and card.ability.extra.chips > 0 then
-        return {
-          message = localize{type = 'variable', key = 'a_chips', vars = {card.ability.extra.chips}}, 
-          colour = G.C.CHIPS,
-          chip_mod = card.ability.extra.chips
-        }
-      end
+    if context.joker_main then
+      return {
+        chips = card.ability.extra.chips
+      }
     end
   end,
   calc_dollar_bonus = function(self, card)
     if G.GAME.current_round.discards_used == 0 and G.GAME.current_round.discards_left > 0 then
-      card.ability.extra.chips = card.ability.extra.chips + (card.ability.extra.chip_mod * G.GAME.current_round.discards_left)
-      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize("k_upgrade_ex"), colour = G.C.CHIPS})
+      SMODS.scale_card(card, {
+        ref_value = 'chips',
+        scalar_value = 'chip_mod',
+        operation = function(ref_table, ref_value, initial, modifier)
+          ref_table[ref_value] = initial + modifier * G.GAME.current_round.discards_left
+        end,
+        message_colour = G.C.CHIPS
+      })
       card.ability.extra.triggers = card.ability.extra.triggers + 1
       if card.ability.extra.triggers >= self.config.evo_rqmt and not next(find_joker("everstone")) then
         poke_evolve(card, "j_poke_garbodor")
       end
-      local earned = ease_poke_dollars(card, "trubbish", G.GAME.current_round.discards_left * card.ability.extra.money, true)
-      return earned
+      return ease_poke_dollars(card, "trubbish", G.GAME.current_round.discards_left * card.ability.extra.money, true)
     end
   end,
 }
@@ -87,29 +88,33 @@ local garbodor={
   stage = "One",
   ptype = "Dark",
   atlas = "Pokedex5",
-  perishable_compat = true,
+  perishable_compat = false,
   blueprint_compat = true,
   eternal_compat = true,
   calculate = function(self, card, context)
-    if context.cardarea == G.jokers and context.scoring_hand then
-      if context.joker_main and card.ability.extra.chips > 0 then
-        return {
-          message = localize{type = 'variable', key = 'a_chips', vars = {card.ability.extra.chips}}, 
-          colour = G.C.CHIPS,
-          chip_mod = card.ability.extra.chips
-        }
-      end
+    if context.joker_main then
+      return {
+        chips = card.ability.extra.chips
+      }
     end
-    if context.end_of_round and not context.individual and not context.repetition and G.GAME.current_round.discards_used == 0 and G.GAME.current_round.discards_left > 0 then
-      card.ability.extra.chips = card.ability.extra.chips + (card.ability.extra.chip_mod * G.GAME.current_round.discards_left)
-      card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize("k_upgrade_ex"), colour = G.C.CHIPS})
-      if ((G.GAME.poke_ante_discards_used or 0) == 0) and G.GAME.blind.boss then
+    if context.end_of_round and not context.individual and not context.repetition then
+      if G.GAME.current_round.discards_used == 0 and G.GAME.current_round.discards_left > 0 and not context.blueprint then
+        SMODS.scale_card(card, {
+          ref_value = 'chips',
+          scalar_value = 'chip_mod',
+          operation = function(ref_table, ref_value, initial, modifier)
+            ref_table[ref_value] = initial + modifier * G.GAME.current_round.discards_left
+          end,
+          message_colour = G.C.CHIPS
+        })
+      end
+      if (G.GAME.poke_ante_discards_used or 0) == 0 and G.GAME.blind.boss then
         G.E_MANAGER:add_event(Event({
           func = (function()
-              add_tag(Tag('tag_garbage'))
-              play_sound('generic1', 0.9 + math.random()*0.1, 0.8)
-              play_sound('holo1', 1.2 + math.random()*0.1, 0.4)
-              return true
+            add_tag(Tag('tag_garbage'))
+            play_sound('generic1', 0.9 + math.random()*0.1, 0.8)
+            play_sound('holo1', 1.2 + math.random()*0.1, 0.4)
+            return true
           end)
         }))
       end
@@ -182,15 +187,19 @@ local zorua = {
     if not type_sticker_applied(card) and not poke_is_in_collection(card) and not G.SETTINGS.paused then
       apply_type_sticker(card, "Dark")
     end
-    if card.area ~= G.jokers and not poke_is_in_collection(card) and not G.SETTINGS.paused then
-      card.ability.extra.hidden_key = card.ability.extra.hidden_key or get_random_poke_key('zorua', nil, 1)
-      local _o = G.P_CENTERS[card.ability.extra.hidden_key]
-      card.children.center.atlas = G.ASSET_ATLAS[_o.atlas]
-      card.children.center:set_sprite_pos(_o.pos)
-    else
-      card.children.center.atlas = G.ASSET_ATLAS[self.atlas]
-      card.children.center:set_sprite_pos(self.pos)
-    end
+    G.E_MANAGER:add_event(Event({
+      func = function()
+        if card.area ~= G.jokers and not poke_is_in_collection(card) and not G.SETTINGS.paused then
+          card.ability.extra.hidden_key = card.ability.extra.hidden_key or get_random_poke_key('zorua', nil, 1)
+          local _o = G.P_CENTERS[card.ability.extra.hidden_key]
+          card.children.center.atlas = G.ASSET_ATLAS[_o.atlas]
+          card.children.center:set_sprite_pos(_o.pos)
+        else
+          card.children.center.atlas = G.ASSET_ATLAS[self.atlas]
+          card.children.center:set_sprite_pos(self.pos)
+        end
+        return true
+      end }))
   end,
   generate_ui = function(self, info_queue, card, desc_nodes, specific_vars, full_UI_table)
     local _c = card and card.config.center or card

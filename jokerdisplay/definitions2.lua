@@ -158,9 +158,12 @@ jd_def["j_poke_sentret"] = {
     },
     reminder_text = {
         {text = "Last Played: "},
-        {ref_table = "card.ability.extra", ref_value = "last_hand" }
+        {ref_table = "card.joker_display_values", ref_value = "hand" }
     },
     text_config = { colour = G.C.MULT },
+    calc_function = function(card)
+      card.joker_display_values.hand = G.GAME.last_hand_played and localize(G.GAME.last_hand_played, 'poker_hands') or localize("poke_none")
+    end
 }
 
 --	Furret
@@ -171,9 +174,12 @@ jd_def["j_poke_furret"] = {
     },
     reminder_text = {
         {text = "Last Played: "},
-        {ref_table = "card.ability.extra", ref_value = "last_hand" }
+        {ref_table = "card.joker_display_values", ref_value = "hand" }
     },
     text_config = { colour = G.C.MULT },
+    calc_function = function(card)
+      card.joker_display_values.hand = G.GAME.last_hand_played and localize(G.GAME.last_hand_played, 'poker_hands') or localize("poke_none")
+    end
 }
 
 --	Hoothoot
@@ -541,9 +547,9 @@ jd_def["j_poke_marill"] = {
       local text, _, scoring_hand = JokerDisplay.evaluate_hand()
       if text ~= "Unknown" then
         for _, scoring_card in pairs(scoring_hand) do
-          if scoring_card.config.center == G.P_CENTERS.c_base then
+          if scoring_card.config.center == G.P_CENTERS.c_base and not scoring_card.debuff then
             unenhanced_found = true
-          else
+          elseif not scoring_card.debuff then
             enhanced_found = true
           end
         end
@@ -572,9 +578,9 @@ jd_def["j_poke_azumarill"] = {
       local text, _, scoring_hand = JokerDisplay.evaluate_hand()
       if text ~= "Unknown" then
         for _, scoring_card in pairs(scoring_hand) do
-          if scoring_card.ability.effect and scoring_card.ability.effect == "Bonus Card" then
+          if scoring_card.ability.effect and scoring_card.ability.effect == "Bonus Card" and not scoring_card.debuff then
             bonus_found = true
-          else
+          elseif not scoring_card.debuff then
             nonbonus_found = true
           end
         end
@@ -653,6 +659,12 @@ jd_def["j_poke_politoed"] = {
           if held_in_hand then return 0 end
               return (playing_card:is_suit(suit)) and (retriggers * JokerDisplay.calculate_joker_triggers(joker_card or 0)) or 0
         end
+    end,
+    style_function = function(card, text, reminder_text, extra)
+      if reminder_text and reminder_text.children[2] then
+        reminder_text.children[2].config.colour = lighten(G.C.SUITS[G.GAME.poke_poli_suit or "Spades"], 0.35)
+      end
+      return false
     end
 }
 
@@ -701,10 +713,10 @@ jd_def["j_poke_yanma"] = {
               end
           end
       end
-      card.joker_display_values.chips = count * card.ability.extra.chips
-      card.joker_display_values.mult = count * card.ability.extra.mult
-      card.joker_display_values.chips2 = count * card.ability.extra.chips2
-      card.joker_display_values.mult2 = count * card.ability.extra.mult2
+      card.joker_display_values.chips = count * card.ability.extra.chip_mod
+      card.joker_display_values.mult = count * card.ability.extra.mult_mod
+      card.joker_display_values.chips2 = count * card.ability.extra.chip_mod2
+      card.joker_display_values.mult2 = count * card.ability.extra.mult_mod2
       local num, dem = SMODS.get_probability_vars(card, card.ability.extra.num, card.ability.extra.dem, 'yanma')
       card.joker_display_values.odds = localize { type = 'variable', key = "jdis_odds", vars = { num, dem } }
       card.joker_display_values.localized_text = "(3,6)"
@@ -1409,15 +1421,12 @@ jd_def["j_poke_piloswine"] = {
 }
 
 --	Corsola
-jd_def["j_poke_corsola"] = { 
+jd_def["j_poke_corsola"] = {
     text = {
         { text = "+" },
-        { ref_table = "card.joker_display_values", ref_value = "mult", retrigger_type = "mult" }
+        { ref_table = "card.ability.extra", ref_value = "mult", retrigger_type = "mult" }
     },
-    text_config = { colour = G.C.MULT },
-calc_function = function(card)
-card.joker_display_values.mult = card.ability.extra.mult_mod * card.ability.extra.corsola_tally
-end
+text_config = { colour = G.C.MULT },
 }
 
 --	Remoraid
@@ -1755,17 +1764,24 @@ jd_def["j_poke_ho_oh"] = {
 
 --	Celebi
 jd_def["j_poke_celebi"] = {
-    text = {
-        {text = "[", colour = G.C.GREY},
-        {ref_table ="card.ability.extra", ref_value = "skip_count", colour = G.C.GREY},
-        {text = "/", colour = G.C.GREY},
-        {ref_table ="card.joker_display_values", ref_value = "limit", colour = G.C.ORANGE},
-        {text = "]", colour = G.C.GREY},
+  text = {
+    {
+      border_nodes = {
+        { text = "X" },
+        { ref_table = "card.joker_display_values", ref_value = "Xmult", retrigger_type = "exp" },
+      },
     },
-    calc_function = function(card)
-        local limit = G.GAME.celebi_skips
-        card.joker_display_values.limit = limit
-    end
+  },
+  reminder_text = {
+    { text = "[", colour = G.C.GREY },
+    { ref_table ="card.ability.extra", ref_value = "skip_count", colour = G.C.GREY },
+    { text = "/", colour = G.C.GREY },
+    { ref_table ="card.ability.extra", ref_value = "skip_target", colour = G.C.ORANGE },
+    { text = "]", colour = G.C.GREY },
+  },
+  calc_function = function(card)
+    card.joker_display_values.Xmult = 1 + (G.GAME.round * card.ability.extra.Xmult_mod)
+  end
 }
 
 

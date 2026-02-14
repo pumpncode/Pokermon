@@ -5,6 +5,7 @@ local berry_juice = {
   name = "berry_juice",
   key = "berry_juice",
   set = "Item",
+  artist = "Sonfive",
   loc_vars = function(self, info_queue, center)
   end,
   berry_juice = true,
@@ -24,6 +25,7 @@ local berry_juice_energy = {
   name = "berry_juice_energy",
   key = "berry_juice_energy",
   set = "Item",
+  artist = "Sonfive",
   loc_vars = function(self, info_queue, center)
     info_queue[#info_queue+1] = {set = 'Other', key = 'energize'}
     return {vars = {(pokermon_config.unlimited_energy and localize("poke_unlimited_energy")) or energy_max + (G.GAME.energy_plus or 0)}}
@@ -78,6 +80,7 @@ local berry_juice_spectral = {
   name = "berry_juice_spectral",
   key = "berry_juice_spectral",
   set = "Item",
+  artist = "Sonfive",
   config = {max_highlighted = 1},
   loc_vars = function(self, info_queue, center)
     info_queue[#info_queue+1] = G.P_CENTERS.e_foil
@@ -107,6 +110,7 @@ local berry_juice_planet = {
   name = "berry_juice_planet",
   key = "berry_juice_planet",
   set = "Item",
+  artist = "Sonfive",
   loc_vars = function(self, info_queue, center)
   end,
   berry_juice = true,
@@ -136,11 +140,7 @@ local berry_juice_planet = {
     table.sort(temp_hands, sort_function)
     
     local upgrade_handname = temp_hands[1].handname
-    card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_upgrade_ex')})
-    update_hand_text({sound = 'button', volume = 0.7, pitch = 0.8, delay = 0.3}, {handname=localize(upgrade_handname, 'poker_hands'),chips = G.GAME.hands[upgrade_handname].chips, 
-        mult = G.GAME.hands[upgrade_handname].mult, level=G.GAME.hands[upgrade_handname].level})
-    level_up_hand(card, upgrade_handname)
-    update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {mult = 0, chips = 0, handname = '', level = ''})
+    SMODS.smart_level_up_hand(card, upgrade_handname)
   end
 }
 
@@ -148,6 +148,7 @@ local berry_juice_item = {
   name = "berry_juice_item",
   key = "berry_juice_item",
   set = "Item",
+  artist = "Sonfive",
   config = {num = 1, dem = 2},
   loc_vars = function(self, info_queue, center)
    info_queue[#info_queue+1] = { set = 'Item', key = 'c_poke_twisted_spoon', poke_add_desc = true}
@@ -187,6 +188,7 @@ local berry_juice_tarot = {
   name = "berry_juice_tarot",
   key = "berry_juice_tarot",
   set = "Item",
+  artist = "Sonfive",
   config = {money = 5},
   loc_vars = function(self, info_queue, center)
    info_queue[#info_queue+1] = { set = 'Tarot', key = 'c_fool'}
@@ -220,6 +222,7 @@ local berry_juice_mystery = {
   name = "berry_juice_mystery",
   key = "berry_juice_mystery",
   set = "Item",
+  artist = "Sonfive",
   config = {money = 5},
   loc_vars = function(self, info_queue, center)
    info_queue[#info_queue+1] = G.P_CENTERS.c_poke_berry_juice

@@ -1,4 +1,7 @@
 local create_energy = function(self, card)
+  if pseudoseed('rainbow') < .10 then
+    return create_card("Spectral", G.pack_cards, nil, nil, true, true, 'c_poke_double_rainbow_energy', nil)
+  end
   local match_type = pseudorandom(pseudoseed('match'))
   if match_type > .50 and #G.jokers.cards > 0 then
     local energy_types = {}
@@ -16,63 +19,61 @@ local create_energy = function(self, card)
   return create_card("Energy", G.pack_cards, nil, nil, true, true, nil, nil)
 end
 
-local create_item = function(self, card)
-  local item_key = nil
-  local evo_item_chance = pseudorandom(pseudoseed('match'))
-  if evo_item_chance > .92 then
-    local evo_item_keys = {}
-    for k, v in pairs(G.jokers.cards) do
-      if v.config.center.item_req then
-        if type(v.config.center.item_req) == "table" then
-          item_key = "c_poke_"..pseudorandom_element(v.config.center.item_req, pseudoseed('match'))
-          if not next(SMODS.find_card(item_key)) then
-            local already_created = nil
-            for k, v in pairs(self.config.c_keys) do
-              if v == item_key then
-                already_created = true
-              end
-            end
-            if not already_created then
-              table.insert(evo_item_keys, item_key)
-            end
-          end
-        else
-          item_key = "c_poke_"..v.config.center.item_req
-          if not next(SMODS.find_card(item_key)) then
-            local already_created = nil
-            for k, v in pairs(self.config.c_keys) do
-              if v == item_key then
-                already_created = true
-              end
-            end
-            if not already_created then
-              table.insert(evo_item_keys, item_key)
-            end
-          end
-        end
-      end
-    end
-    if #evo_item_keys > 0 then
-      return create_card("Item", G.pack_cards, nil, nil, true, true, pseudorandom_element(evo_item_keys, pseudoseed('match')), nil)
-    else
-      return create_card("Item", G.pack_cards, nil, nil, true, true, nil, nil)
+local poll_evo_item = function(seed)
+  local evo_item_key_set = {}
+  for _, v in pairs(G.jokers.cards) do
+    if v.config.center.item_req then
+      local item_req = type(v.config.center.item_req) == 'table'
+          and pseudorandom_element(v.config.center.item_req, pseudoseed(seed))
+          or v.config.center.item_req
+
+      local prefix = table.contains(native_evo_items, item_req)
+          and 'poke'
+          or v.config.center.poke_custom_prefix
+
+      local item_key = 'c_' .. prefix .. '_' .. item_req
+
+      evo_item_key_set[item_key] = true
     end
   end
-  return create_card("Item", G.pack_cards, nil, nil, true, true, nil, nil)
+  local evo_item_key_list = {}
+  for key, _ in pairs(evo_item_key_set) do
+    if G.P_CENTERS[key] and not G.GAME.used_jokers[key] and not G.GAME.banned_keys[key] and (not (type(G.P_CENTERS[key].in_pool) == 'function') or G.P_CENTERS[key]:in_pool()) then
+      evo_item_key_list[#evo_item_key_list+1] = key
+    end
+  end
+  if #evo_item_key_list > 1 then
+    return pseudorandom_element(evo_item_key_list, pseudoseed(seed))
+  end
+  return evo_item_key_list[1]
+end
+
+local create_item = function(seed)
+  if pseudorandom(pseudoseed(seed .. '_evo_item')) > .92 then
+    local evo_item_key = poll_evo_item('match')
+    if evo_item_key then
+      return SMODS.create_card { key = evo_item_key, area = G.pack_cards, skip_materialize = true }
+    end
+  end
+  return SMODS.create_card { set = "Item", area = G.pack_cards, skip_materialize = true, soulable = true, key_append = seed }
 end
 
 local create_pocket_card = function(self, card, i)
     if i == 1 then
-      return create_energy(self, card)
+      if not G.GAME.modifiers.no_energy then
+        return create_energy(self, card)
+      else
+        return create_item('pocket')
+      end
     elseif i == 2 and card.from_tag and G.GAME.round_resets.ante >= 5 and not next(SMODS.find_card('c_poke_megastone')) then
       local mega = pseudorandom(pseudoseed('pocket'))
       if mega > .75 then
         return create_card("Item", G.pack_cards, nil, nil, true, true, 'c_poke_megastone', nil)
       else
-        return create_item(self, card)
+        return create_item('pocket')
       end
     else
-      return create_item(self, card)
+      return create_item('pocket')
     end
 end
 
@@ -101,19 +102,14 @@ local pack1 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 0, y = 0 },
-	config = { extra = 4, choose = 1, c_keys = {}},
+	config = { extra = 4, choose = 1 },
 	cost = 4,
 	order = 1,
 	weight = 1,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -126,19 +122,14 @@ local pack2 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 1, y = 0 },
-	config = { extra = 4, choose = 1, c_keys = {} },
+	config = { extra = 4, choose = 1 },
 	cost = 4,
 	order = 2,
 	weight = 1,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -151,19 +142,14 @@ local pack3 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 2, y = 0 },
-	config = { extra = 6, choose = 1, c_keys = {} },
+	config = { extra = 6, choose = 1 },
 	cost = 6,
 	order = 3,
 	weight = 1,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -176,19 +162,14 @@ local pack4 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 3, y = 0 },
-	config = { extra = 6, choose = 2, c_keys = {} },
+	config = { extra = 6, choose = 2 },
 	cost = 8,
 	order = 4,
 	weight = 0.25,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -201,19 +182,14 @@ local pack5 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 0, y = 1 },
-	config = { extra = 4, choose = 1, c_keys = {}},
+	config = { extra = 4, choose = 1 },
 	cost = 4,
 	order = 1,
 	weight = 1,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -226,19 +202,14 @@ local pack6 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 1, y = 1 },
-	config = { extra = 4, choose = 1, c_keys = {} },
+	config = { extra = 4, choose = 1 },
 	cost = 4,
 	order = 2,
 	weight = 1,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -251,19 +222,14 @@ local pack7 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 2, y = 1 },
-	config = { extra = 6, choose = 1, c_keys = {} },
+	config = { extra = 6, choose = 1 },
 	cost = 6,
 	order = 3,
 	weight = 1,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -276,19 +242,14 @@ local pack8 = {
 	kind = "Energy",
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 3, y = 1 },
-	config = { extra = 6, choose = 2, c_keys = {} },
+	config = { extra = 6, choose = 2 },
 	cost = 8,
 	order = 4,
 	weight = 0.25,
   draw_hand = true,
   unlocked = true,
   discovered = true,
-	create_card = function(self, card, i)
-    local created_card = create_pocket_card(self, card, i)
-    self.config.c_keys[#self.config.c_keys + 1] = created_card.config.center_key
-    if i == self.config.extra + (G.GAME.extra_pocket_picks or 0) then self.config.c_keys = {} end
-    return created_card
-	end,
+	create_card = create_pocket_card,
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.config.center.config.choose, card.ability.extra - 1, 1 } }
 	end,
@@ -300,6 +261,7 @@ local wish_pack = {
 	key = "pokepack_wish_pack",
 	kind = "Spectral",
 	atlas = "AtlasBoosterpacksBasic",
+  artist = "Catzzadilla",
 	pos = { x = 4, y = 0 },
 	config = { extra = 6, choose = 1 },
 	cost = 999,
@@ -316,6 +278,7 @@ local wish_pack = {
 
     local jirachi_cards = {'c_poke_fake_banker', 'c_poke_fake_booster', 'c_poke_fake_power', 'c_poke_fake_copy', 'c_poke_fake_fixer', 'c_poke_fake_masterball', }
     local temp_card = {area = G.pack_cards, key = jirachi_cards[1 + (i-1)%6], no_edition = true, skip_materialize = true}
+    if not G.P_CENTERS[temp_card.key] then temp_card.key = 'c_judgement' end
     return SMODS.create_card(temp_card)
 	end,
 	loc_vars = function(self, info_queue, card)
@@ -358,6 +321,7 @@ local starter_pack = {
 	name = "Starter Pack",
 	key = "pokepack_starter_pack",
 	kind = "Spectral",
+  artist = {name = {"Currently a placeholder!", "Want your art here?", "Join the Discord!"}},
 	atlas = "AtlasBoosterpacksBasic",
 	pos = { x = 4, y = 1 },
 	config = { extra = 4, choose = 1 },
@@ -405,7 +369,11 @@ local starter_pack = {
     elseif i == 5 and #pseudo_starters > 0 then
       pack_key = pseudorandom_element(pseudo_starters, pseudoseed('pseudo'))
     else
-      pack_key = 'j_poke_caterpie'
+      if G.P_CENTERS['j_poke_caterpie'] then
+        pack_key = 'j_poke_caterpie'
+      else
+        pack_key = nil
+      end
     end
     
     local temp_card = {area = G.pack_cards, key = pack_key, no_edition = true, skip_materialize = true}
@@ -436,7 +404,7 @@ local starter_pack = {
 	group_key = "k_poke_starter_pack",
 }
 
-local pack_list = {pack1, pack2, pack3, pack4, pack5, pack6, pack7, pack8, wish_pack, starter_pack}
+local pack_list = {pack1, pack2, pack5, pack6, pack3, pack7, pack4, pack8, wish_pack, starter_pack}
 
 for k, v in pairs(pack_list) do
   if not v.ease_background_colour then
